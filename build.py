@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Generates the six pages of the Dental Solutions of Winter Haven site (version 2, the conventional layout)
 from one set of shared parts. Run `python3 build.py` after editing; the .html files are the output."""
-import json, pathlib
+import json, pathlib, hashlib
 
 ROOT = pathlib.Path(__file__).parent
+def ver(name):
+    """Short hash of a file, appended to its URL so browsers fetch the new version after a deploy."""
+    return hashlib.md5((ROOT / name).read_bytes()).hexdigest()[:8]
 LAKES = json.load(open(ROOT / 'assets/data/lakes.json'))
 CREDITS = json.load(open(ROOT / 'assets/credits.json'))
 
@@ -144,7 +147,7 @@ def head(title, desc):
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="{FAVICON}">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v={ver("styles.css")}">
 </head>
 <body>
 <a class="skip" href="#main">{t("Skip to content", "Ir al contenido")}</a>
@@ -218,7 +221,7 @@ def footer():
     </div>
   </div>
 </footer>
-<script src="main.js"></script>
+<script src="main.js?v={ver("main.js")}"></script>
 </body>
 </html>
 '''
