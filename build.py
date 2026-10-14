@@ -34,16 +34,16 @@ PAGES = [
 
 # --------------------------------------------------------------------------- small icons
 I = {
-    'phone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.9 2.1z"/></svg>',
-    'clock': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-    'pin': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-    'globe': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>',
+    'phone': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.6a1.5 1.5 0 0 1 1.5 1.3l.5 3.1a1.5 1.5 0 0 1-.5 1.4L5.3 9a12.3 12.3 0 0 0 9.7 9.7l1.2-1.3a1.5 1.5 0 0 1 1.4-.5l3.1.5a1.5 1.5 0 0 1 1.3 1.5v1.6a1.5 1.5 0 0 1-1.5 1.5H19C9.6 22 2 14.4 2 5V3.5z"/></svg>',
+    'clock': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5a1 1 0 1 0-2 0v5c0 .3.1.5.3.7l3 3a1 1 0 0 0 1.4-1.4L13 11.6V7z"/></svg>',
+    'pin': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a7.5 7.5 0 0 0-7.5 7.5C4.5 15.2 12 22 12 22s7.5-6.8 7.5-12.5A7.5 7.5 0 0 0 12 2zm0 10.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4z"/></svg>',
+    'globe': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3.2 3 3.2 17 0 20M12 2c-3.2 3-3.2 17 0 20M4 7.5h16M4 16.5h16" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
     'check': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
     'star': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>',
-    'mail': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+    'mail': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v.6l-9 5.6-9-5.6V6z"/><path d="M3 8.9V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.9l-9 5.6-9-5.6z"/></svg>',
     'tooth': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 3C9 3 10 4 12 4s3-1 4.5-1C19.5 3 21 5.5 21 8c0 2-1 3.5-1.5 5-.6 2-1 6-2.5 8-1 1.3-2 .3-2.3-1-.4-1.8-.7-4-2.7-4s-2.3 2.2-2.7 4c-.3 1.3-1.3 2.3-2.3 1C5.5 19 5.1 15 4.5 13 4 11.5 3 10 3 8c0-2.5 1.5-5 4.5-5z"/></svg>',
-    'moon': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
-    'alert': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+    'moon': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+    'alert': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 3.9a2 2 0 0 1 3.4 0l8.5 14.1a2 2 0 0 1-1.7 3H3.5a2 2 0 0 1-1.7-3l8.5-14.1zM12 8a1 1 0 0 0-1 1v4a1 1 0 1 0 2 0V9a1 1 0 0 0-1-1zm0 9.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>',
 }
 def check(): return f'<span class="check">{I["check"]}</span>'
 def stars(): return '<span class="stars" aria-label="5 stars">' + I['star'] * 5 + '</span>'
@@ -211,7 +211,7 @@ def footer():
         <li><a href="{TEL}">{PHONE}</a></li>
         <li><a href="mailto:{MAIL}">{MAIL}</a></li>
         <li>{t("Monday to Thursday, 8 a.m. to 5 p.m.", "Lunes a jueves, 8 a.m. a 5 p.m.")}<br>{t("Friday by appointment", "Viernes con cita")}</li>
-        <li><a href="{MAPS}" target="_blank" rel="noopener">{t("Get directions", "Cómo llegar")} →</a></li>
+        <li><a class="link-arrow" href="{MAPS}" target="_blank" rel="noopener">{t("Get directions", "Cómo llegar")}</a></li>
       </ul></div>
     </div>
     <p class="credits">{t("Pictures of Winter Haven and Central Florida, used with thanks:", "Imágenes de Winter Haven y Florida Central, usadas con agradecimiento:")} {credits_line()}. {t("Map", "Mapa")} © OpenStreetMap contributors (ODbL). {t("None of the pictures shows the office itself.", "Ninguna imagen muestra el consultorio en sí.")}</p>
@@ -353,7 +353,7 @@ def home():
   <div class="strip-grid">
     <div class="info"><span class="icon">{I["clock"]}</span><div><strong>{t("Hours", "Horario")}</strong><span class="open-now" data-open-now></span><span>{t("Mon–Thu 8 a.m.–5 p.m. · Fri by appointment", "Lun–jue 8 a.m.–5 p.m. · Vie con cita")}</span></div></div>
     <div class="info"><span class="icon">{I["phone"]}</span><div><strong>{t("Call us", "Llámenos")}</strong><a href="{TEL}">{PHONE}</a><span>{t("Emergencies: call first thing", "Urgencias: llame a primera hora")}</span></div></div>
-    <div class="info"><span class="icon">{I["pin"]}</span><div><strong>{t("Address", "Dirección")}</strong><span>{ADDR1}<br>{ADDR2}</span><a href="{MAPS}" target="_blank" rel="noopener">{t("Directions", "Cómo llegar")} →</a></div></div>
+    <div class="info"><span class="icon">{I["pin"]}</span><div><strong>{t("Address", "Dirección")}</strong><span>{ADDR1}<br>{ADDR2}</span><a class="link-arrow" href="{MAPS}" target="_blank" rel="noopener">{t("Directions", "Cómo llegar")}</a></div></div>
     <div class="info"><span class="icon">{I["globe"]}</span><div><strong>{t("Languages", "Idiomas")}</strong><span>English · Español · Deutsch</span><span>{t("From the phone call to the chair", "De la llamada al sillón")}</span></div></div>
   </div>
 </section>
