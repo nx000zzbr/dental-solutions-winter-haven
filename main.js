@@ -70,8 +70,7 @@ setInterval(updateOpenNow, 60000);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('is-open')) burger.click(); });
 })();
 
-// Reveals, once, as sections enter. After 2.5 s the hero is shown whatever happened to the animations.
-setTimeout(() => document.documentElement.classList.add('settled'), 2500);
+// Reveals, once, as sections enter.
 (() => {
   const hero = document.querySelector('.shutter');
   const pair = document.querySelector('.hero-pair');
@@ -94,11 +93,11 @@ function updateChain() {
   const select = document.getElementById('lake-select');
   const map = document.getElementById('chain-map');
   const result = document.getElementById('chain-result');
-  if (!select || !map || !result) return;
+  if (!select || !result) return;
   const es = document.documentElement.dataset.lang === 'es';
   const picked = select.value;
-  map.querySelectorAll('path[data-name]').forEach((p) => p.classList.toggle('is-picked', p.dataset.name === picked));
-  const label = map.querySelector('#chain-label');
+  if (map) map.querySelectorAll('path[data-name]').forEach((p) => p.classList.toggle('is-picked', p.dataset.name === picked));
+  const label = map ? map.querySelector('#chain-label') : null;
   const opt = select.selectedOptions[0];
   if (!opt || !picked) {
     result.innerHTML = `<strong>${es ? 'Elija su lago' : 'Pick your lake'}</strong><span>${es ? 'Las distancias son aproximadas, desde el centro del lago hasta el consultorio.' : 'Distances are approximate, from the middle of the lake to the office.'}</span>`;

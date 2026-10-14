@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-"""Generates the six pages of the Dental Solutions of Winter Haven site from one set of shared parts.
-Run `python3 build.py` after editing; the .html files are the output.
-
-The one motif is the outline of Lake Eloise (assets/data/lakes.json), the lake behind the office.
-It is the hero shape, the mask of every photograph, the button, the bullet and the footer."""
-import json, pathlib, random, urllib.parse
+"""Generates the six pages of the Dental Solutions of Winter Haven site (version 2, the conventional layout)
+from one set of shared parts. Run `python3 build.py` after editing; the .html files are the output."""
+import json, pathlib
 
 ROOT = pathlib.Path(__file__).parent
 LAKES = json.load(open(ROOT / 'assets/data/lakes.json'))
-MOTIF = LAKES['motif']
+CREDITS = json.load(open(ROOT / 'assets/credits.json'))
 
 def t(en, es):
     """One piece of text in both languages. CSS shows the active one."""
@@ -21,6 +18,7 @@ ADDR1 = '6390 Cypress Gardens Blvd, Suite B'
 ADDR2 = 'Winter Haven, FL 33884'
 MAPS = 'https://www.google.com/maps/dir/?api=1&destination=6390+Cypress+Gardens+Blvd+Winter+Haven+FL+33884'
 REVIEW = 'https://www.google.com/search?q=Dental+Solutions+of+Winter+Haven+reviews'
+CUR = ' aria-current="page"'
 
 PAGES = [
     ('index.html', 'Home', 'Inicio'),
@@ -31,153 +29,24 @@ PAGES = [
     ('contact.html', 'Contact', 'Contacto'),
 ]
 
-CREDITS = json.load(open(ROOT / 'assets/credits.json'))
+# --------------------------------------------------------------------------- small icons
+I = {
+    'phone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.9 2.1z"/></svg>',
+    'clock': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    'pin': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    'globe': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>',
+    'check': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    'star': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>',
+    'mail': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+    'tooth': '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 3C9 3 10 4 12 4s3-1 4.5-1C19.5 3 21 5.5 21 8c0 2-1 3.5-1.5 5-.6 2-1 6-2.5 8-1 1.3-2 .3-2.3-1-.4-1.8-.7-4-2.7-4s-2.3 2.2-2.7 4c-.3 1.3-1.3 2.3-2.3 1C5.5 19 5.1 15 4.5 13 4 11.5 3 10 3 8c0-2.5 1.5-5 4.5-5z"/></svg>',
+    'moon': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+    'alert': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+}
+def check(): return f'<span class="check">{I["check"]}</span>'
+def stars(): return '<span class="stars" aria-label="5 stars">' + I['star'] * 5 + '</span>'
+def checklist(items, cols=False):
+    return f'<ul class="checks{" checks-2" if cols else ""}">' + ''.join(f'<li>{check()}<span>{t(*x) if isinstance(x, tuple) else x}</span></li>' for x in items) + '</ul>'
 
-# --------------------------------------------------------------------------- shared parts
-def svg_data(path_d, fill='black'):
-    svg = f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1' preserveAspectRatio='none'><path d='{path_d}' fill='{fill}'/></svg>"
-    return 'url("data:image/svg+xml,' + urllib.parse.quote(svg, safe="'/:=<>, ") .replace(' ', '%20') + '")'
-
-CHEV = 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M3 6l5 5 5-5%27 fill=%27none%27 stroke=%27%2310282b%27 stroke-width=%272%27/%3E%3C/svg%3E")'
-CHEV_LIGHT = CHEV.replace('%2310282b', '%23f4f1ea')
-
-def root_vars():
-    mask = svg_data(MOTIF)
-    coupon = ("radial-gradient(14px at 46% 0, transparent 97%, #000 100%), radial-gradient(14px at 46% 100%, transparent 97%, #000 100%)")
-    coupon_v = ("radial-gradient(14px at 0 46%, transparent 97%, #000 100%), radial-gradient(14px at 100% 46%, transparent 97%, #000 100%)")
-    return (f":root{{--lake-mask:{mask};--chev:{CHEV};--chev-light:{CHEV_LIGHT};--coupon-mask:{coupon};--coupon-mask-v:{coupon_v};}}"
-            ".coupon{-webkit-mask-composite:source-in;mask-composite:intersect;}")
-
-def lake_defs():
-    return (f'<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>'
-            f'<clipPath id="lake" clipPathUnits="objectBoundingBox"><path d="{MOTIF}"/></clipPath>'
-            f'<clipPath id="lake-wide" clipPathUnits="objectBoundingBox"><path d="{MOTIF}" transform="translate(0 1) rotate(-90)"/></clipPath>'
-            f'<symbol id="lk" viewBox="0 0 1 1" preserveAspectRatio="none"><path d="{MOTIF}"/></symbol>'
-            f'</defs></svg>')
-
-def schema():
-    data = {"@context": "https://schema.org", "@type": "Dentist", "name": "Dental Solutions of Winter Haven",
-            "url": "https://www.dentalsolutionsofwh.com/", "telephone": "+1-863-324-7121", "email": MAIL,
-            "address": {"@type": "PostalAddress", "streetAddress": ADDR1, "addressLocality": "Winter Haven", "addressRegion": "FL", "postalCode": "33884", "addressCountry": "US"},
-            "geo": {"@type": "GeoCoordinates", "latitude": 27.9825809, "longitude": -81.6782343},
-            "openingHoursSpecification": [{"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday"], "opens": "08:00", "closes": "17:00"}],
-            "employee": [{"@type": "Person", "name": "Dr. Carlos A. Polo", "jobTitle": "Prosthodontist"}, {"@type": "Person", "name": "Dr. Jose G. Cruz", "jobTitle": "Dentist"}],
-            "knowsLanguage": ["en", "es", "de"], "paymentAccepted": "Cash, Check, Visa, Mastercard, American Express, Discover, CareCredit"}
-    return json.dumps(data, ensure_ascii=False)
-
-FAVICON = "data:image/svg+xml," + urllib.parse.quote(f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='#f4f1ea'/><g transform='translate(14 6) scale(36 52)'><path d='{MOTIF}' fill='#146b73'/></g></svg>")
-
-def head(title, desc):
-    return f'''<!doctype html>
-<html lang="en" data-lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
-<meta name="description" content="{desc}">
-<meta name="theme-color" content="#146b73">
-<meta property="og:title" content="{title}">
-<meta property="og:description" content="{desc}">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="es_US">
-<script type="application/ld+json">{schema()}</script>
-<script>document.documentElement.classList.add('js');try{{var l=localStorage.getItem('dswh-lang');if(l==='es'||l==='en'){{document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}}}catch(e){{}}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" href="{FAVICON}">
-<link rel="stylesheet" href="styles.css">
-<style>{root_vars()}</style>
-</head>
-<body>
-{lake_defs()}
-<a class="skip" href="#main">{t("Skip to content", "Ir al contenido")}</a>
-'''
-
-CUR = ' aria-current="page"'
-LAZY = ' loading="lazy"'
-
-def header(current):
-    links = ''.join(f'<a href="{f}"{CUR if f == current else ""}>{t(en, es)}</a>' for f, en, es in PAGES[1:])
-    return f'''<header class="top">
-  <div class="wrap top-row">
-    <a class="wordmark" href="index.html" aria-label="Dental Solutions of Winter Haven, home"><i aria-hidden="true"></i><span><b>Dental Solutions</b><small>of Winter Haven</small></span></a>
-    <nav class="menu" id="menu" aria-label="Main">{links}
-      <button class="lang" id="lang" type="button" aria-label="Cambiar idioma / Change language">{t("Español", "English")}</button>
-    </nav>
-    <a class="btn" href="contact.html">{t("Book a visit", "Reservar cita")}</a>
-    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="menu">{t("Menu", "Menú")}</button>
-  </div>
-</header>
-<main id="main">'''
-
-def credits_line():
-    parts = []
-    for c in CREDITS:
-        title = c['title'] if len(c['title']) < 60 else c['title'][:57].rstrip() + '…'
-        parts.append(f'<a href="{c["page"]}" rel="noopener">{title}</a> ({c["creator"]}, {c.get("license") or c.get("licence")})')
-    return ' · '.join(parts)
-
-def footer():
-    colours = ['#146b73', '#3f7a4a', '#cfe3e2', '#146b73', '#d7e4cf', '#0f565d', '#146b73', '#cfe3e2', '#3f7a4a']
-    heights = [78, 100, 62, 88, 70, 96, 58, 84, 92]
-    chain = ''.join(f'<i style="background:{c};height:{h}%"></i>' for c, h in zip(colours, heights))
-    links = ''.join(f'<a href="{f}">{t(en, es)}</a>' for f, en, es in PAGES)
-    return f'''</main>
-<footer class="foot">
-  <div class="wrap">
-    <div class="foot-chain" aria-hidden="true" data-reveal>{chain}</div>
-    <div class="grid foot-grid" data-reveal>
-      <div class="foot-links">
-        <div><a href="index.html">Dental Solutions of Winter Haven</a>{links}</div>
-        <div><a href="services.html">{t("Services", "Servicios")}</a><a href="services.html#general">{t("Family dentistry", "Odontología familiar")}</a><a href="services.html#prostho">{t("Prosthodontics", "Prostodoncia")}</a><a href="services.html#cosmetic">{t("Cosmetic", "Estética")}</a><a href="services.html#implants">{t("Implants and surgery", "Implantes y cirugía")}</a><a href="sleep-apnea.html">{t("Sleep apnea", "Apnea del sueño")}</a></div>
-        <div><a href="doctors.html">{t("Doctors", "Doctores")}</a><a href="doctors.html#polo">Dr. Carlos A. Polo</a><a href="doctors.html#cruz">Dr. Jose G. Cruz</a><a href="reviews.html">{t("Reviews", "Opiniones")}</a></div>
-        <div><a href="contact.html">{t("Visit", "Visita")}</a><a href="contact.html#hours">{t("Hours and directions", "Horario y cómo llegar")}</a><a href="contact.html#pay">{t("Insurance and payment", "Seguros y pagos")}</a><a href="contact.html#faq">{t("Questions", "Preguntas")}</a></div>
-      </div>
-      <div class="foot-contact">
-        <p>{ADDR1}<br>{ADDR2}</p>
-        <p><a href="{TEL}">{PHONE}</a><br><a href="mailto:{MAIL}">{MAIL}</a></p>
-        <p>{t("Monday to Thursday, 8 a.m. to 5 p.m. Friday by appointment.", "Lunes a jueves, 8 a.m. a 5 p.m. Viernes con cita.")}</p>
-        <p>English · Español · Deutsch</p>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>© 2026 Dental Solutions of Winter Haven, PLC</span>
-      <a class="btn btn-paper" href="{TEL}">{t("Call", "Llamar")} {PHONE}</a>
-    </div>
-    <p class="credits">{t("Pictures of Winter Haven and Central Florida, used with thanks:", "Imágenes de Winter Haven y Florida Central, usadas con agradecimiento:")} {credits_line()}. {t("Map tiles", "Mapa")} © OpenStreetMap contributors (ODbL). {t("None of the pictures shows the office itself.", "Ninguna imagen muestra el consultorio en sí.")}</p>
-  </div>
-</footer>
-<script src="main.js"></script>
-</body>
-</html>
-'''
-
-def pic(src, alt, w, h, cls='pic pic-tall lake', lazy=True, extra=''):
-    return f'<figure class="{cls}"{extra}><img src="{src}" alt="{alt}" width="{w}" height="{h}"{LAZY if lazy else ""}></figure>'
-
-def section_title(en, es, lead=None, light=False):
-    out = f'<h2 class="h2">{t(en, es)}</h2>'
-    if lead:
-        out += f'<p class="lead{" muted" if not light else ""}">{t(*lead)}</p>'
-    return out
-
-def cta_band(en_h='Ready for a first visit?', es_h='¿Agendamos su primera visita?'):
-    return f'''<section class="section section-tight field on-lake">
-  <div class="wrap grid band" data-reveal>
-    <div class="band-text">
-      <h2 class="h2">{t(en_h, es_h)}</h2>
-      <p>{t("Call during office hours, or send a message and the front desk will get back to you the next business day. Same‑day times are kept for emergencies.", "Llame en horario de oficina o envíe un mensaje y la recepción le responde el siguiente día hábil. Se reservan horas del mismo día para urgencias.")}</p>
-    </div>
-    <div class="band-actions btn-row">
-      <a class="btn btn-citrus" href="contact.html">{t("Book a visit", "Reservar cita")}</a>
-      <a class="btn btn-paper" href="{TEL}">{t("Call", "Llamar")} {PHONE}</a>
-    </div>
-  </div>
-</section>'''
-
-# --------------------------------------------------------------------------- drawings (one flat language)
 INK, LAKE, PAPER, CYP = '#10282b', '#146b73', '#f4f1ea', '#3f7a4a'
 ART = {
     'general': f'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 12c10-6 30-6 40 0 12 7 14 24 8 38-3 7-4 20-6 30-1 6-7 7-9 1-2-6-3-16-7-16s-5 10-7 16c-2 6-8 5-9-1-2-10-3-23-6-30-6-14-4-31 6-38z" fill="{INK}"/><path d="M38 24c6-4 18-4 24 0" fill="none" stroke="{PAPER}" stroke-width="5" stroke-linecap="round"/></svg>',
@@ -188,55 +57,7 @@ ART = {
     'emergency': f'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 12c10-6 30-6 40 0 12 7 14 24 8 38-3 7-4 20-6 30-1 6-7 7-9 1-2-6-3-16-7-16s-5 10-7 16c-2 6-8 5-9-1-2-10-3-23-6-30-6-14-4-31 6-38z" fill="{INK}"/><path d="M52 14l-10 30h12l-8 30 24-38H56l8-22z" fill="{PAPER}"/></svg>',
 }
 
-def flow_svg(horizontal=True):
-    rnd = random.Random(1884)
-    uses = []
-    if horizontal:
-        W, H, uw, uh = 1200, 260, 11, 16
-        # left third: scattered, two pale tones
-        for _ in range(58):
-            x, y = rnd.uniform(0, 360), rnd.uniform(0, H - uh)
-            uses.append((x, y, '#cfe3e2' if rnd.random() < 0.55 else '#dcd6c6'))
-        # middle third: tight ribbon three high
-        for i in range(22):
-            for j in range(3):
-                uses.append((420 + i * 15, H / 2 - 24 + j * 16, '#5e9a9c'))
-        # right third: neat rows in the accent
-        for i in range(14):
-            for j in range(5):
-                uses.append((790 + i * 28, 40 + j * 38, LAKE))
-    else:
-        W, H, uw, uh = 300, 420, 10, 14
-        for _ in range(48):
-            x, y = rnd.uniform(0, W - uw), rnd.uniform(0, 130)
-            uses.append((x, y, '#cfe3e2' if rnd.random() < 0.55 else '#dcd6c6'))
-        for i in range(3):
-            for j in range(8):
-                uses.append((W / 2 - 22 + i * 15, 160 + j * 15, '#5e9a9c'))
-        for i in range(8):
-            for j in range(5):
-                uses.append((40 + i * 30, 300 + j * 24, LAKE))
-    body = ''.join(f'<use href="#lk" x="{x:.0f}" y="{y:.0f}" width="{uw}" height="{uh}" fill="{c}"/>' for x, y, c in uses)
-    return f'<svg class="{"horizontal" if horizontal else "vertical"}" viewBox="0 0 {W} {H}" width="{W}" height="{H}" aria-hidden="true">{body}</svg>'
 
-def chain_map():
-    paths = ''.join(f'<path d="{l["path"]}" data-name="{l["name"]}" class="{"is-near" if l["km"] < 3 else ""}"><title>{l["name"]}</title></path>' for l in LAKES['lakes'])
-    ox, oy = LAKES['office']
-    return (f'<svg id="chain-map" viewBox="0 0 {LAKES["W"]} {LAKES["H"]}" role="img" aria-label="Map of the lakes of Winter Haven with the office marked">'
-            f'{paths}<circle class="office-ring" cx="{ox}" cy="{oy}" r="26"/><circle class="office" cx="{ox}" cy="{oy}" r="12"/>'
-            f'<text x="{ox + 36}" y="{oy + 9}" data-l="en">The office</text><text x="{ox + 36}" y="{oy + 9}" data-l="es">El consultorio</text><text id="chain-label" text-anchor="middle" x="0" y="0"></text></svg>')
-
-def lake_options():
-    opts = ''.join(f'<option value="{l["name"]}" data-km="{l["km"]}" data-cx="{l["cx"]}" data-cy="{l["cy"]}">{l["name"]}</option>' for l in sorted(LAKES['lakes'], key=lambda l: l['name']))
-    return f'<option value="" data-en="Choose a lake…" data-es="Elija un lago…">Choose a lake…</option>{opts}'
-
-def tilemap():
-    g = json.load(open(ROOT / 'assets/map/grid.json'))
-    tiles = ''.join(f'<img src="assets/map/{g["z"]}-{x}-{y}.png" width="256" height="256" alt="" loading="lazy">' for y in g['rows'] for x in g['cols'])
-    return (f'<div class="tilemap" role="img" aria-label="Map of 6390 Cypress Gardens Boulevard, Winter Haven"><div class="tilemap-grid">{tiles}</div>'
-            f'<span class="tilemap-pin" style="left:{g["marker"][0]*100:.2f}%;top:{g["marker"][1]*100:.2f}%"></span></div>')
-
-# --------------------------------------------------------------------------- content
 SERVICES = [
     ('general', 'tile-b', ('Family and general dentistry', 'Odontología general y familiar'),
      ('Cleanings, checkups and digital X‑rays, for everyone in the family.', 'Limpiezas, revisiones y radiografías digitales, para toda la familia.'),
@@ -288,279 +109,388 @@ FAQS = [
      ('For many people with mild to moderate obstructive sleep apnea, yes. A custom oral appliance holds the lower jaw slightly forward so the airway stays open. It is fitted here after a sleep study, and adjusted until it is comfortable.', 'Para muchas personas con apnea obstructiva leve a moderada, sí. Un aparato bucal a medida sostiene la mandíbula un poco hacia adelante para que la vía aérea quede abierta. Se ajusta aquí después de un estudio del sueño, hasta que sea cómodo.')),
 ]
 
-def faq_cards(items):
-    out = ''
-    for i, (tab, q, a) in enumerate(items):
-        out += (f'<details class="card card-{i % 3 + 1}" name="faq" style="--tab:{min(i * 150, 600)}px"{" open" if i == 0 else ""}>'
-                f'<summary><span class="tab">{t(*tab)}</span><span class="q">{t(*q)}</span></summary><div class="a"><p>{t(*a)}</p></div></details>')
-    return out
 
-def pay_tiles():
-    names = ['Visa', 'Mastercard', 'American Express', 'Discover', 'CareCredit', t('Most PPO plans', 'La mayoría de planes PPO'), t('Cash and check', 'Efectivo y cheque'), 'CitiHealth']
-    return '<div class="pay">' + ''.join(f'<div>{n}</div>' for n in names) + '</div>'
 
-def coupon(mail=MAIL):
-    reasons = [('Cleaning and checkup', 'Limpieza y revisión'), ('Toothache or emergency', 'Dolor o urgencia'), ('Crowns, dentures or implants', 'Coronas, prótesis o implantes'), ('Cosmetic: veneers, whitening', 'Estética: carillas, blanqueamiento'), ('Sleep apnea appliance', 'Aparato para apnea del sueño'), ('Something else', 'Otra cosa')]
-    opts = ''.join(f'<option data-en="{en}" data-es="{es}">{en}</option>' for en, es in reasons)
-    return f'''<section class="coupon-wrap">
-  <div class="wrap grid">
-    <form class="coupon" id="contact-form" data-mail="{mail}" data-reveal>
-      <div class="coupon-left">
-        <h2 class="h2">{t("Request a visit", "Solicite una cita")}</h2>
-        <p>{t("Send this and the front desk replies by phone or email the next business day. For same‑day pain, call instead.", "Envíe esto y la recepción le responde por teléfono o correo el siguiente día hábil. Si tiene dolor hoy, mejor llame.")}</p>
+def schema():
+    data = {"@context": "https://schema.org", "@type": "Dentist", "name": "Dental Solutions of Winter Haven",
+            "url": "https://www.dentalsolutionsofwh.com/", "telephone": "+1-863-324-7121", "email": MAIL,
+            "address": {"@type": "PostalAddress", "streetAddress": ADDR1, "addressLocality": "Winter Haven", "addressRegion": "FL", "postalCode": "33884", "addressCountry": "US"},
+            "geo": {"@type": "GeoCoordinates", "latitude": 27.9825809, "longitude": -81.6782343},
+            "openingHoursSpecification": [{"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday"], "opens": "08:00", "closes": "17:00"}],
+            "employee": [{"@type": "Person", "name": "Dr. Carlos A. Polo", "jobTitle": "Prosthodontist"}, {"@type": "Person", "name": "Dr. Jose G. Cruz", "jobTitle": "Dentist"}],
+            "knowsLanguage": ["en", "es", "de"], "paymentAccepted": "Cash, Check, Visa, Mastercard, American Express, Discover, CareCredit"}
+    return json.dumps(data, ensure_ascii=False)
+
+FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23146b73'/%3E%3Cpath d='M22 14c4 0 7 3 10 3s6-3 10-3c7 0 11 6 11 12 0 5-2.5 8.5-4 12-1.5 5-2.5 14-6 18-2.5 3-5 1-5.7-2.5-1-4.5-1.8-9.5-5.3-9.5s-4.3 5-5.3 9.5C26 57 23.5 59 21 56c-3.5-4-4.5-13-6-18-1.5-3.5-4-7-4-12 0-6 4-12 11-12z' fill='%23fff'/%3E%3C/svg%3E"
+
+def head(title, desc):
+    return f'''<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="{desc}">
+<meta name="theme-color" content="#146b73">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="es_US">
+<script type="application/ld+json">{schema()}</script>
+<script>document.documentElement.classList.add('js');try{{var l=localStorage.getItem('dswh-lang');if(l==='es'||l==='en'){{document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}}}catch(e){{}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="{FAVICON}">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">{t("Skip to content", "Ir al contenido")}</a>
+'''
+
+def logo(cls=''):
+    return f'<a class="logo {cls}" href="index.html" aria-label="Dental Solutions of Winter Haven, home"><span class="logo-mark">{I["tooth"]}</span><span><b>Dental Solutions</b><small>of Winter Haven</small></span></a>'
+
+def header(current):
+    links = ''.join(f'<a href="{f}"{CUR if f == current else ""}>{t(en, es)}</a>' for f, en, es in PAGES)
+    return f'''<div class="topbar">
+  <div class="wrap topbar-row">
+    <span><span class="open-now" data-open-now></span><span class="hide-sm"> · {t("Mon–Thu 8 a.m.–5 p.m. · Fri by appointment", "Lun–jue 8 a.m.–5 p.m. · Vie con cita")}</span></span>
+    <span class="hide-sm">{ADDR1}, {ADDR2}</span>
+    <span class="spacer hide-md">English · Español · Deutsch</span>
+    <button class="lang" id="lang" type="button" aria-label="Cambiar idioma / Change language">{t("Español", "English")}</button>
+  </div>
+</div>
+<header class="header">
+  <div class="wrap header-row">
+    {logo()}
+    <nav class="nav" id="menu" aria-label="Main">{links}</nav>
+    <div class="header-actions">
+      <a class="header-phone" href="{TEL}">{PHONE}</a>
+      <a class="btn" href="contact.html#request">{t("Book a visit", "Reservar cita")}</a>
+      <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="menu">{t("Menu", "Menú")}</button>
+    </div>
+  </div>
+</header>
+<main id="main">'''
+
+def credits_line():
+    parts = []
+    for c in CREDITS:
+        title = c['title'] if len(c['title']) < 60 else c['title'][:57].rstrip() + '…'
+        parts.append(f'<a href="{c["page"]}" rel="noopener">{title}</a> ({c["creator"]}, {c.get("license") or c.get("licence")})')
+    return ' · '.join(parts)
+
+def footer():
+    pages = ''.join(f'<li><a href="{f}">{t(en, es)}</a></li>' for f, en, es in PAGES)
+    return f'''</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        {logo()}
+        <p>{t("A prosthodontist and a general dentist on Cypress Gardens Boulevard, Winter Haven. Family, cosmetic and restorative dentistry, implants, sleep apnea appliances and same‑day emergencies.", "Un prostodoncista y un dentista general en Cypress Gardens Boulevard, Winter Haven. Odontología familiar, estética y restauradora, implantes, aparatos para apnea del sueño y urgencias el mismo día.")}</p>
+        <p style="margin-top:0.75rem">English · Español · Deutsch</p>
       </div>
-      <div class="coupon-right">
-        <label class="sr" for="f-name">{t("Your name", "Su nombre")}</label>
-        <input id="f-name" name="name" type="text" autocomplete="name" required placeholder="Your name" data-en="Your name" data-es="Su nombre">
-        <label class="sr" for="f-phone">{t("Phone", "Teléfono")}</label>
-        <input id="f-phone" name="phone" type="tel" autocomplete="tel" required placeholder="Phone" data-en="Phone" data-es="Teléfono">
-        <label class="sr" for="f-reason">{t("Reason for the visit", "Motivo de la visita")}</label>
-        <select id="f-reason" name="reason">{opts}</select>
-        <label class="sr" for="f-msg">{t("Message", "Mensaje")}</label>
-        <textarea id="f-msg" name="message" placeholder="Anything we should know (optional)" data-en="Anything we should know (optional)" data-es="Algo que debamos saber (opcional)"></textarea>
-        <button class="coupon-submit" type="submit">{t("Send the request", "Enviar la solicitud")}</button>
-      </div>
-    </form>
-    <p class="form-note">{t("The form opens your email app with the message written for you. No information is stored on this site.", "El formulario abre su aplicación de correo con el mensaje ya escrito. Este sitio no guarda ninguna información.")}</p>
+      <div><h4>{t("Pages", "Páginas")}</h4><ul>{pages}</ul></div>
+      <div><h4>{t("Services", "Servicios")}</h4><ul>
+        <li><a href="services.html#general">{t("Family dentistry", "Odontología familiar")}</a></li>
+        <li><a href="services.html#prostho">{t("Crowns, bridges and dentures", "Coronas, puentes y prótesis")}</a></li>
+        <li><a href="services.html#cosmetic">{t("Cosmetic dentistry", "Odontología estética")}</a></li>
+        <li><a href="services.html#implants">{t("Implants and oral surgery", "Implantes y cirugía oral")}</a></li>
+        <li><a href="sleep-apnea.html">{t("Sleep apnea treatment", "Tratamiento de apnea del sueño")}</a></li>
+        <li><a href="services.html#emergency">{t("Emergencies", "Urgencias")}</a></li>
+      </ul></div>
+      <div><h4>{t("Contact", "Contacto")}</h4><ul>
+        <li>{ADDR1}<br>{ADDR2}</li>
+        <li><a href="{TEL}">{PHONE}</a></li>
+        <li><a href="mailto:{MAIL}">{MAIL}</a></li>
+        <li>{t("Monday to Thursday, 8 a.m. to 5 p.m.", "Lunes a jueves, 8 a.m. a 5 p.m.")}<br>{t("Friday by appointment", "Viernes con cita")}</li>
+        <li><a href="{MAPS}" target="_blank" rel="noopener">{t("Get directions", "Cómo llegar")} →</a></li>
+      </ul></div>
+    </div>
+    <p class="credits">{t("Pictures of Winter Haven and Central Florida, used with thanks:", "Imágenes de Winter Haven y Florida Central, usadas con agradecimiento:")} {credits_line()}. {t("Map", "Mapa")} © OpenStreetMap contributors (ODbL). {t("None of the pictures shows the office itself.", "Ninguna imagen muestra el consultorio en sí.")}</p>
+    <div class="footer-bottom">
+      <span>© 2026 Dental Solutions of Winter Haven, PLC</span>
+      <span>{t("Website proposal", "Propuesta de sitio web")} · <a href="v1/index.html">{t("See version 1", "Ver versión 1")}</a></span>
+    </div>
+  </div>
+</footer>
+<script src="main.js"></script>
+</body>
+</html>
+'''
+
+def page_head(crumb, h1, lead, extra=''):
+    return f'''<section class="page-head">
+  <div class="wrap">
+    <p class="crumbs"><a href="index.html">{t("Home", "Inicio")}</a> › {t(*crumb)}</p>
+    <h1 class="h1">{t(*h1)}</h1>
+    <p class="lead">{t(*lead)}</p>
+    {extra}
   </div>
 </section>'''
 
+def cta_band(en_h='Ready to book a visit?', es_h='¿Listo para reservar una cita?'):
+    return f'''<section class="section band">
+  <div class="wrap band-row">
+    <div>
+      <h2 class="h2">{t(en_h, es_h)}</h2>
+      <p>{t("Call during office hours, or send a request and the front desk will get back to you the next business day. Same‑day times are kept for emergencies.", "Llame en horario de oficina o envíe una solicitud y la recepción le responde el siguiente día hábil. Se reservan horas del mismo día para urgencias.")}</p>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-white btn-lg" href="contact.html#request">{t("Request an appointment", "Solicitar una cita")}</a>
+      <a class="btn btn-ghost-white btn-lg" href="{TEL}">{I["phone"]} {PHONE}</a>
+    </div>
+  </div>
+</section>'''
+
+def faq_list(items, open_first=True):
+    out = ''
+    for i, (tab, q, a) in enumerate(items):
+        out += f'<details class="faq" name="faq"{" open" if (i == 0 and open_first) else ""}><summary>{t(*q)}</summary><div class="answer"><p>{t(*a)}</p></div></details>'
+    return out
+
+def tilemap():
+    g = json.load(open(ROOT / 'assets/map/grid.json'))
+    tiles = ''.join(f'<img src="assets/map/{g["z"]}-{x}-{y}.png" width="256" height="256" alt="" loading="lazy">' for y in g['rows'] for x in g['cols'])
+    return (f'<div class="tilemap" role="img" aria-label="Map of 6390 Cypress Gardens Boulevard, Winter Haven"><div class="tilemap-grid">{tiles}</div>'
+            f'<span class="tilemap-pin" style="left:{g["marker"][0]*100:.2f}%;top:{g["marker"][1]*100:.2f}%"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a8.5 8.5 0 0 0-8.5 8.5C3.5 15 12 24 12 24s8.5-9 8.5-15.5A8.5 8.5 0 0 0 12 0zm0 12a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></span></div>')
+
+def lake_options():
+    opts = ''.join(f'<option value="{l["name"]}" data-km="{l["km"]}">{l["name"]}</option>' for l in sorted(LAKES['lakes'], key=lambda l: l['name']))
+    return f'<option value="" data-en="Choose your lake…" data-es="Elija su lago…">Choose your lake…</option>{opts}'
+
+def lake_tool():
+    return f'''<div class="card lake-tool">
+  <h3 class="h3">{t("How far are you from the office?", "¿Qué tan lejos está del consultorio?")}</h3>
+  <p class="muted" style="margin:0.4rem 0 1rem">{t("Winter Haven is a chain of lakes. Pick the lake you live near and see the approximate drive.", "Winter Haven es una cadena de lagos. Elija el lago cerca del que vive y vea el trayecto aproximado.")}</p>
+  <label class="sr" for="lake-select">{t("Your lake", "Su lago")}</label>
+  <select id="lake-select">{lake_options()}</select>
+  <div class="lake-result" id="chain-result" aria-live="polite"><strong>{t("Pick your lake", "Elija su lago")}</strong><span>{t("Distances are approximate, from the middle of the lake to the office.", "Las distancias son aproximadas, del centro del lago al consultorio.")}</span></div>
+</div>'''
+
+def request_form(mail=MAIL):
+    reasons = [('Cleaning and checkup', 'Limpieza y revisión'), ('Toothache or emergency', 'Dolor o urgencia'), ('Crowns, dentures or implants', 'Coronas, prótesis o implantes'), ('Cosmetic: veneers, whitening', 'Estética: carillas, blanqueamiento'), ('Sleep apnea appliance', 'Aparato para apnea del sueño'), ('Something else', 'Otra cosa')]
+    opts = ''.join(f'<option data-en="{en}" data-es="{es}">{en}</option>' for en, es in reasons)
+    return f'''<form class="card card-pad-lg" id="contact-form" data-mail="{mail}">
+  <h2 class="h2" style="margin-bottom:0.5rem">{t("Request an appointment", "Solicite una cita")}</h2>
+  <p class="muted" style="margin-bottom:1.5rem">{t("The front desk replies by phone or email the next business day. For pain today, please call.", "La recepción responde por teléfono o correo el siguiente día hábil. Si tiene dolor hoy, mejor llame.")}</p>
+  <div class="form-grid">
+    <div class="row-2">
+      <div><label for="f-name">{t("Full name", "Nombre completo")}</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
+      <div><label for="f-phone">{t("Phone", "Teléfono")}</label><input id="f-phone" name="phone" type="tel" autocomplete="tel" required></div>
+    </div>
+    <div><label for="f-reason">{t("Reason for the visit", "Motivo de la visita")}</label><select id="f-reason" name="reason">{opts}</select></div>
+    <div><label for="f-msg">{t("Message (optional)", "Mensaje (opcional)")}</label><textarea id="f-msg" name="message"></textarea></div>
+    <button class="btn btn-lg btn-block" type="submit">{t("Send the request", "Enviar la solicitud")}</button>
+  </div>
+  <p class="form-note">{t("The form opens your email app with the message written for you. Nothing is stored on this site.", "El formulario abre su aplicación de correo con el mensaje ya escrito. Este sitio no guarda nada.")}</p>
+</form>'''
+
+def service_cards(short=False):
+    out = ''
+    for key, tone, name, fact, lead, items in SERVICES:
+        href = 'sleep-apnea.html' if key == 'sleep' else f'services.html#{key}'
+        out += f'<a class="card card-link" href="{href}"><span class="icon">{ART[key]}</span><h3 class="h3">{t(*name)}</h3><p>{t(*fact)}</p><span class="link link-arrow">{t("Learn more", "Más información")}</span></a>'
+    return out
+
+def doctor_cards():
+    return f'''
+<div class="card doctor">
+  <div class="doctor-photo"><div><b>CP</b><span>{t("Photo to be supplied", "Foto a entregar")}</span></div></div>
+  <div>
+    <h3>Dr. Carlos A. Polo, DDS, MS</h3>
+    <p class="role">{t("Prosthodontist", "Prostodoncista")}</p>
+    <p>{t("Specialist in replacing and rebuilding teeth: crowns, bridges, dentures, implant restorations and full‑mouth reconstruction. Graduated cum laude in 2003. Also fits custom sleep apnea appliances.", "Especialista en reemplazar y reconstruir dientes: coronas, puentes, prótesis, restauraciones sobre implantes y reconstrucción completa. Graduado cum laude en 2003. También ajusta aparatos a medida para apnea del sueño.")}</p>
+    <ul class="tags"><li class="tag">English</li><li class="tag">Español</li><li class="tag">Deutsch</li></ul>
+    <a class="link link-arrow" href="doctors.html#polo" style="display:inline-block;margin-top:1rem">{t("About Dr. Polo", "Sobre el Dr. Polo")}</a>
+  </div>
+</div>
+<div class="card doctor">
+  <div class="doctor-photo"><div><b>JC</b><span>{t("Photo to be supplied", "Foto a entregar")}</span></div></div>
+  <div>
+    <h3>Dr. Jose G. Cruz, DDS</h3>
+    <p class="role">{t("General dentist · Co‑founder", "Dentista general · Cofundador")}</p>
+    <p>{t("Checkups, fillings, root canals, extractions and implant placement, for children and adults. Patients describe him as kind and compassionate.", "Revisiones, empastes, conductos, extracciones y colocación de implantes, para niños y adultos. Los pacientes lo describen como amable y compasivo.")}</p>
+    <ul class="tags"><li class="tag">English</li><li class="tag">Español</li></ul>
+    <a class="link link-arrow" href="doctors.html#cruz" style="display:inline-block;margin-top:1rem">{t("About Dr. Cruz", "Sobre el Dr. Cruz")}</a>
+  </div>
+</div>'''
+
+def review_cards(n=4):
+    return ''.join(f'<blockquote class="card review">{stars()}<p>{t(*q)}</p><footer>{name}<span>{t("Google review", "Opinión en Google")}</span></footer></blockquote>' for q, name in QUOTES[:n])
+
 # =================================================================== HOME
 def home():
-    tiles = ''
-    for i, (key, tone, name, fact, _, _) in enumerate(SERVICES):
-        wide = ' tile-wide' if key == 'prostho' else ''
-        href = 'sleep-apnea.html' if key == 'sleep' else f'services.html#{key}'
-        tiles += f'<a class="tile{wide}" href="{href}"><div class="tile-art {tone}">{ART[key]}</div><h3>{t(*name)}</h3><p>{t(*fact)}</p></a>'
-    quotes = ''.join(f'<blockquote class="mark"><p>{t(*q)}</p><footer>{name}</footer></blockquote>' for q, name in QUOTES)
     return f'''
-<section class="hero wrap grid">
-  <div class="hero-text">
-    <h1 class="h1" data-rise style="--i:0">{t("Two dentists, one plan.", "Dos dentistas, un plan.")}</h1>
-    <p class="lead" data-rise style="--i:1">{t("A prosthodontist and a general dentist at 6390 Cypress Gardens Boulevard, Winter Haven. From a cleaning to a full‑mouth reconstruction, in English, Spanish and German.", "Un prostodoncista y un dentista general en 6390 Cypress Gardens Boulevard, Winter Haven. De una limpieza a una reconstrucción completa, en español, inglés y alemán.")}</p>
-    <div class="btn-row" data-rise style="--i:2">
-      <a class="btn" href="contact.html">{t("Book a visit", "Reservar cita")}</a>
-      <a class="textlink" href="{TEL}">{t("or call", "o llame al")} {PHONE}</a>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">{t("Family dentistry · Winter Haven, FL", "Odontología familiar · Winter Haven, FL")}</span>
+      <h1 class="h1">{t("Complete dental care for the whole family, in one office", "Atención dental completa para toda la familia, en un solo consultorio")}</h1>
+      <p class="lead">{t("A prosthodontist and a general dentist on Cypress Gardens Boulevard. From cleanings and checkups to crowns, implants and full‑mouth reconstruction, in English, Spanish and German.", "Un prostodoncista y un dentista general en Cypress Gardens Boulevard. De limpiezas y revisiones a coronas, implantes y reconstrucción completa, en español, inglés y alemán.")}</p>
+      <div class="btn-row">
+        <a class="btn btn-lg" href="contact.html#request">{t("Request an appointment", "Solicitar una cita")}</a>
+        <a class="btn btn-outline btn-lg" href="{TEL}">{I["phone"]} {PHONE}</a>
+      </div>
+      <ul class="hero-badges">
+        <li>{check()} {t("4.9 stars on Google", "4,9 estrellas en Google")}</li>
+        <li>{check()} {t("Same‑day emergencies", "Urgencias el mismo día")}</li>
+        <li>{check()} {t("Most PPO plans accepted", "Mayoría de planes PPO")}</li>
+      </ul>
     </div>
-    <p class="hero-note small muted" data-rise style="--i:3"><span class="open-now" data-open-now></span> · {t("Monday to Thursday, 8 to 5 · Same‑day emergencies", "Lunes a jueves, 8 a 5 · Urgencias el mismo día")}</p>
+    <figure class="hero-pic"><img src="assets/winter-haven-legoland-florida-island-in-the.jpg" alt="Lake Eloise, Winter Haven, seen from above on a summer day" width="1920" height="1402" fetchpriority="high"></figure>
   </div>
-  <div class="hero-pair lake" aria-hidden="true"></div>
-  <figure class="hero-shape lake shutter">
-    <img src="assets/winter-haven-legoland-florida-island-in-the.jpg" alt="Lake Eloise seen from above, with the far shore and summer clouds" width="1920" height="1402" fetchpriority="high">
-  </figure>
 </section>
 
-<section class="wrap">
-  <div class="statement-block" data-reveal>
-    <p class="statement">{t("Between Lake Eloise and Lake Winterset, on the road to Cypress Gardens", "Entre Lake Eloise y Lake Winterset, camino a Cypress Gardens")} <span class="inl"><img src="assets/cypress-gardens-41115552574.jpg" alt="" width="640" height="409" loading="lazy"></span> {t("a prosthodontist and a general dentist look after Winter Haven’s families", "un prostodoncista y un dentista general cuidan a las familias de Winter Haven")} <span class="inl"><img src="assets/cypress-gardens-florida-26975314327.jpg" alt="" width="640" height="402" loading="lazy"></span> {t("in three languages.", "en tres idiomas.")}</p>
+<section class="wrap strip">
+  <div class="strip-grid">
+    <div class="info"><span class="icon">{I["clock"]}</span><div><strong>{t("Hours", "Horario")}</strong><span class="open-now" data-open-now></span><span>{t("Mon–Thu 8 a.m.–5 p.m. · Fri by appointment", "Lun–jue 8 a.m.–5 p.m. · Vie con cita")}</span></div></div>
+    <div class="info"><span class="icon">{I["phone"]}</span><div><strong>{t("Call us", "Llámenos")}</strong><a href="{TEL}">{PHONE}</a><span>{t("Emergencies: call first thing", "Urgencias: llame a primera hora")}</span></div></div>
+    <div class="info"><span class="icon">{I["pin"]}</span><div><strong>{t("Address", "Dirección")}</strong><span>{ADDR1}<br>{ADDR2}</span><a href="{MAPS}" target="_blank" rel="noopener">{t("Directions", "Cómo llegar")} →</a></div></div>
+    <div class="info"><span class="icon">{I["globe"]}</span><div><strong>{t("Languages", "Idiomas")}</strong><span>English · Español · Deutsch</span><span>{t("From the phone call to the chair", "De la llamada al sillón")}</span></div></div>
   </div>
 </section>
 
 <section class="section" id="services">
-  <div class="wrap grid spec">
-    <div class="spec-head" data-reveal>
-      {section_title("Everything a smile needs", "Todo lo que una sonrisa necesita")}
-      <p class="muted">{t("Six areas of care, one office. The prosthodontist plans the restorative work; the general dentist keeps everything else healthy.", "Seis áreas de atención, un solo consultorio. El prostodoncista planea el trabajo restaurador; el dentista general mantiene sano todo lo demás.")}</p>
-      <div class="btn-row"><a class="btn" href="services.html">{t("All services", "Todos los servicios")}</a></div>
+  <div class="wrap">
+    <div class="section-head split">
+      <div><span class="eyebrow">{t("Services", "Servicios")}</span><h2 class="h2">{t("Everything a smile needs", "Todo lo que una sonrisa necesita")}</h2><p class="lead">{t("Six areas of care, one office. The prosthodontist plans the restorative work; the general dentist keeps everything else healthy.", "Seis áreas de atención, un solo consultorio. El prostodoncista planea el trabajo restaurador; el dentista general mantiene sano todo lo demás.")}</p></div>
+      <a class="btn btn-outline" href="services.html">{t("All services", "Todos los servicios")}</a>
     </div>
-    <div class="tiles" data-reveal>{tiles}</div>
+    <div class="grid-3">{service_cards()}</div>
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap grid" data-reveal>
-    <div class="flow-head">
-      {section_title("Your first visit", "Su primera visita")}
-      <p class="muted">{t("About an hour. Everything you are worried about goes in; one plan, in steps you can afford, comes out.", "Alrededor de una hora. Entran todas sus preocupaciones; sale un solo plan, en pasos que pueda pagar.")}</p>
+<section class="section section-alt">
+  <div class="wrap two-col">
+    <div>
+      <span class="eyebrow">{t("Why patients choose us", "Por qué nos eligen")}</span>
+      <h2 class="h2">{t("A specialist and a general dentist, under one roof", "Un especialista y un dentista general, bajo un mismo techo")}</h2>
+      <p class="lead" style="margin-top:0.75rem">{t("Most offices refer crowns, dentures and implants to a specialist across town. Here the specialist is down the hall, so one plan covers everything and nobody repeats your X‑rays.", "La mayoría de los consultorios remiten coronas, prótesis e implantes a un especialista al otro lado del pueblo. Aquí el especialista está en el pasillo: un solo plan lo cubre todo y nadie repite sus radiografías.")}</p>
+      <div class="btn-row" style="margin-top:1.5rem"><a class="btn" href="doctors.html">{t("Meet the doctors", "Conozca a los doctores")}</a></div>
     </div>
-    <div class="flow-diagram">{flow_svg(True)}{flow_svg(False)}</div>
-    <div class="flow-steps">
-      <div><h3>{t("Everything", "Todo")}</h3><p>{t("Tell us what hurts, what you avoid, what you have been told before. Photographs and digital X‑rays, at a fraction of the old dose.", "Cuéntenos qué duele, qué evita, qué le han dicho antes. Fotografías y radiografías digitales, con una fracción de la dosis de antes.")}</p></div>
-      <div><h3>{t("One exam", "Un examen")}</h3><p>{t("Both doctors can look at the same case: the general dentist for the health of teeth and gums, the prosthodontist for what needs rebuilding.", "Los dos doctores pueden ver el mismo caso: el dentista general por la salud de dientes y encías, el prostodoncista por lo que hay que reconstruir.")}</p></div>
-      <div><h3>{t("One plan", "Un plan")}</h3><p>{t("Options in order, with what each costs and what can wait. Nothing starts until you say so.", "Opciones en orden, con lo que cuesta cada una y lo que puede esperar. Nada empieza hasta que usted lo diga.")}</p></div>
+    <div class="grid-2" style="gap:1.25rem">
+      <div class="feature"><span class="icon">{I["tooth"]}</span><div><h3>{t("Prosthodontist on staff", "Prostodoncista en el equipo")}</h3><p>{t("Crowns, dentures and implants planned by a specialist with extra years of training.", "Coronas, prótesis e implantes planeados por un especialista con años extra de formación.")}</p></div></div>
+      <div class="feature"><span class="icon">{I["globe"]}</span><div><h3>{t("Three languages", "Tres idiomas")}</h3><p>{t("English, Spanish and German, from the front desk to the treatment plan.", "Inglés, español y alemán, de la recepción al plan de tratamiento.")}</p></div></div>
+      <div class="feature"><span class="icon">{I["alert"]}</span><div><h3>{t("Same‑day emergencies", "Urgencias el mismo día")}</h3><p>{t("Times are kept open Monday to Thursday for pain that can’t wait.", "Se reservan horas de lunes a jueves para el dolor que no puede esperar.")}</p></div></div>
+      <div class="feature"><span class="icon">{I["clock"]}</span><div><h3>{t("Plans with the cost written down", "Planes con el costo por escrito")}</h3><p>{t("Options in order, with what each costs. Nothing starts until you say so.", "Opciones en orden, con lo que cuesta cada una. Nada empieza hasta que usted lo diga.")}</p></div></div>
     </div>
-  </div>
-</section>
-
-<section class="section-tight">
-  <div class="panel" data-reveal>
-    <div class="panel-head">
-      <h2 class="h2">{t("A specialist and a generalist, together", "Un especialista y un generalista, juntos")}</h2>
-    </div>
-    <div class="panel-text">
-      <div><h3>Dr. Carlos A. Polo, DDS, MS</h3><p>{t("Prosthodontist. Graduated cum laude from the Universidad Francisco Marroquín School of Dentistry in Guatemala City in 2003, then specialty training in prosthodontics. Crowns, dentures, implants and full reconstructions. English, Spanish and German.", "Prostodoncista. Graduado cum laude de la Facultad de Odontología de la Universidad Francisco Marroquín, en la Ciudad de Guatemala, en 2003, y luego formación de especialidad en prostodoncia. Coronas, prótesis, implantes y reconstrucciones completas. Inglés, español y alemán.")}</p></div>
-      <div><h3>Dr. Jose G. Cruz, DDS</h3><p>{t("General dentist and co‑founder of the practice. Checkups, fillings, root canals, extractions and implant work, for children and adults, in English and Spanish.", "Dentista general y cofundador del consultorio. Revisiones, empastes, conductos, extracciones e implantes, para niños y adultos, en español e inglés.")}</p></div>
-      <div class="btn-row"><a class="btn btn-paper" href="doctors.html">{t("Meet the doctors", "Conozca a los doctores")}</a></div>
-    </div>
-    <figure class="panel-portrait lake pic drift">
-      <img src="assets/hartman-litho-sales-co-ig4-e-8595.jpg" alt="Vintage postcard of Gardenia Lane in Idylwild Gardens, Winter Haven" width="1920" height="1209" loading="lazy">
-    </figure>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
-    <div class="board" data-reveal>
-      <div class="mark mark-head"><h2 class="h2">{t("4.9 stars on Google", "4,9 estrellas en Google")}</h2><p>{t("From more than 260 patient reviews. A few of them:", "De más de 260 opiniones de pacientes. Algunas:")}</p></div>
-      {quotes}
-      <div class="mark mark-fact"><p class="big">English · Español · Deutsch</p><p class="note">{t("Three languages at the front desk and in the chair", "Tres idiomas en la recepción y en el sillón")}</p></div>
-      <div class="mark mark-pic lake"><img src="assets/jacaranda-apartments-winter-haven-florida.jpg" alt="Vintage postcard of the Jacaranda Apartments, Winter Haven" width="1024" height="646" loading="lazy"></div>
+    <div class="section-head center"><span class="eyebrow">{t("New patients", "Nuevos pacientes")}</span><h2 class="h2">{t("Your first visit, step by step", "Su primera visita, paso a paso")}</h2><p class="lead">{t("About an hour. You leave with a plan you understand and can afford.", "Alrededor de una hora. Sale con un plan que entiende y puede pagar.")}</p></div>
+    <div class="steps">
+      <div class="step"><h3>{t("Tell us everything", "Cuéntenos todo")}</h3><p>{t("What hurts, what you avoid, what you have been told before. Photographs and digital X‑rays at a fraction of the old dose.", "Qué duele, qué evita, qué le han dicho antes. Fotografías y radiografías digitales con una fracción de la dosis de antes.")}</p></div>
+      <div class="step"><h3>{t("One exam, two doctors", "Un examen, dos doctores")}</h3><p>{t("The general dentist checks teeth and gums; the prosthodontist looks at what needs rebuilding.", "El dentista general revisa dientes y encías; el prostodoncista ve lo que hay que reconstruir.")}</p></div>
+      <div class="step"><h3>{t("One plan, your decision", "Un plan, su decisión")}</h3><p>{t("Options in order, with costs and what can wait. We check your insurance and financing before anything starts.", "Opciones en orden, con costos y lo que puede esperar. Verificamos su seguro y financiamiento antes de empezar.")}</p></div>
     </div>
-    <div class="btn-row" style="margin-top:2rem"><a class="btn" href="reviews.html">{t("All reviews", "Todas las opiniones")}</a></div>
   </div>
 </section>
 
-<section class="section field on-lake chain">
-  <div class="wrap grid">
-    <div class="chain-text" data-reveal>
-      <h2 class="h2">{t("How far is your lake?", "¿Qué tan lejos queda su lago?")}</h2>
-      <p>{t("Winter Haven is a chain of lakes joined by canals. The office is on Cypress Gardens Boulevard, between Lake Eloise and Lake Winterset. Pick the lake you live near.", "Winter Haven es una cadena de lagos unidos por canales. El consultorio está en Cypress Gardens Boulevard, entre Lake Eloise y Lake Winterset. Elija el lago cerca del que vive.")}</p>
-      <div class="chain-pick">
-        <label for="lake-select">{t("Your lake", "Su lago")}</label>
-        <select id="lake-select">{lake_options()}</select>
-      </div>
-      <div class="chain-result" id="chain-result" aria-live="polite"><strong>{t("Pick your lake", "Elija su lago")}</strong><span>{t("Distances are approximate, from the middle of the lake to the office.", "Las distancias son aproximadas, del centro del lago al consultorio.")}</span></div>
-      <div class="btn-row"><a class="btn btn-citrus" href="{MAPS}" target="_blank" rel="noopener">{t("Directions", "Cómo llegar")}</a></div>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head split">
+      <div><span class="eyebrow">{t("Our doctors", "Nuestros doctores")}</span><h2 class="h2">{t("Two doctors, one plan", "Dos doctores, un plan")}</h2></div>
+      <a class="btn btn-outline" href="doctors.html">{t("About the doctors", "Sobre los doctores")}</a>
     </div>
-    <div class="chain-map">{chain_map()}<p class="chain-note">{t("Lake outlines from OpenStreetMap. Tap a lake to pick it.", "Contornos de los lagos de OpenStreetMap. Toque un lago para elegirlo.")}</p></div>
+    <div class="grid-2">{doctor_cards()}</div>
   </div>
 </section>
 
 <section class="section">
-  <div class="wrap grid" data-reveal-pic>
-    <div class="strip-head" data-reveal>
-      {section_title("The town the office belongs to", "El pueblo al que pertenece el consultorio")}
-      <p>{t("Winter Haven grew on citrus and on its lakes, and the pictures its visitors sent home still look like the view from Cypress Gardens Boulevard. From the city’s archives:", "Winter Haven creció con los cítricos y con sus lagos, y las postales que sus visitantes mandaban a casa todavía se parecen a la vista desde Cypress Gardens Boulevard. De los archivos de la ciudad:")}</p>
+  <div class="wrap">
+    <div class="section-head split">
+      <div><span class="eyebrow">{t("Reviews", "Opiniones")}</span><h2 class="h2">{t("What patients say", "Lo que dicen los pacientes")}</h2><p class="lead">{t("4.9 stars on Google from more than 260 reviews.", "4,9 estrellas en Google con más de 260 opiniones.")}</p></div>
+      <a class="btn btn-outline" href="reviews.html">{t("All reviews", "Todas las opiniones")}</a>
     </div>
-    <div class="strip">
-      <figure>{pic("assets/sunset-lake-howard-winter-haven-fl.jpg", "Sunset over Lake Howard, Winter Haven, with a fisherman on a dock", 1024, 683, "pic lake")}<figcaption>{t("Lake Howard at sunset, eight miles up the chain.", "Lake Howard al atardecer, a ocho millas por la cadena.")}</figcaption></figure>
-      <figure>{pic("assets/florida-citrus-queen-sally-ardrey-and-her.jpg", "The 1955 Florida Citrus Queen and her court on a stage of oranges, Winter Haven", 1200, 950, "pic lake")}<figcaption>{t("The Florida Citrus Exposition, Winter Haven, 1955.", "La Exposición de Cítricos de Florida, Winter Haven, 1955.")}</figcaption></figure>
-      <figure>{pic("assets/the-orange-blossom-special-going-through-orange.jpg", "Vintage postcard of the Orange Blossom Special train passing orange groves", 1024, 648, "pic lake")}<figcaption>{t("The Orange Blossom Special through the groves, 1940s.", "El Orange Blossom Special entre los naranjales, años 40.")}</figcaption></figure>
-    </div>
+    <div class="grid-3">{review_cards(3)}</div>
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap grid">
-    <div class="faq-head" data-reveal>
-      {section_title("Questions people ask first", "Lo que la gente pregunta primero")}
-    </div>
-    <div class="cards">{faq_cards(FAQS)}</div>
-  </div>
-</section>
-
-{coupon()}
-'''
-
-# =================================================================== SERVICES
-def services():
-    rows = ''
-    photos = ['assets/jacaranda-apartments-winter-haven-florida.jpg', 'assets/cypress-gardens-41115552574.jpg', 'assets/the-orange-blossom-special-going-through-orange.jpg']
-    alts = ['Vintage postcard of the Jacaranda Apartments, Winter Haven', 'The gardens and gazebo at Cypress Gardens, Winter Haven', 'Vintage postcard of the Orange Blossom Special train passing orange groves']
-    for i, (key, tone, name, fact, lead, items) in enumerate(SERVICES):
-        li = ''.join(f'<li>{t(*x)}</li>' for x in items)
-        more = f'<a class="btn btn-paper" href="sleep-apnea.html">{t("The sleep apnea page", "La página de apnea del sueño")}</a>' if key == 'sleep' else ''
-        rows += f'''
-<section class="row grid" id="{key}" data-reveal>
-  <div class="row-text" data-reveal>
-    <h2 class="h2">{t(*name)}</h2>
-    <p class="lead muted">{t(*lead)}</p>
-    <ul class="lakes">{li}</ul>
-    <div class="btn-row"><a class="btn" href="contact.html">{t("Ask about this care", "Consultar sobre esto")}</a>{more}</div>
-  </div>
-  <div class="row-art"><div class="tile-art {tone} lake">{ART[key]}</div></div>
-</section>'''
-    return f'''
-<section class="wrap grid page-head">
-  <h1 class="h1" data-rise style="--i:0">{t("Everything a smile needs", "Todo lo que una sonrisa necesita")}</h1>
-  <p class="lead muted" data-rise style="--i:1">{t("From routine cleanings to full‑mouth reconstruction, planned by a prosthodontist and a general dentist in the same office, so you are not sent somewhere else for the next step.", "De limpiezas de rutina a reconstrucción de boca completa, planeado por un prostodoncista y un dentista general en el mismo consultorio, para que no lo manden a otro lugar para el siguiente paso.")}</p>
-  {pic(photos[0], alts[0], 1024, 646, 'pic pic-tall lake shutter drift', lazy=False)}
-</section>
-<div class="wrap section">
-{rows}
-</div>
-<section class="section field-surface">
-  <div class="wrap grid two" data-reveal>
+<section class="section section-alt">
+  <div class="wrap two-col two-col-start">
     <div>
-      {section_title("Pictures of the same town", "Imágenes del mismo pueblo")}
-      <p class="lead muted">{t("Cypress Gardens opened on Lake Eloise in 1936 and made the chain of lakes famous. The boulevard that carried visitors there is the one the office is on today.", "Cypress Gardens abrió en Lake Eloise en 1936 e hizo famosa la cadena de lagos. El bulevar que llevaba a los visitantes es el mismo donde hoy está el consultorio.")}</p>
+      <span class="eyebrow">{t("Visit us", "Visítenos")}</span>
+      <h2 class="h2">{t("On Cypress Gardens Boulevard", "En Cypress Gardens Boulevard")}</h2>
+      <dl class="facts" style="margin-top:1.25rem">
+        <div><dt>{t("Address", "Dirección")}</dt><dd>{ADDR1}<br>{ADDR2}</dd></div>
+        <div><dt>{t("Hours", "Horario")}</dt><dd>{t("Monday to Thursday, 8 a.m. to 5 p.m.", "Lunes a jueves, 8 a.m. a 5 p.m.")}<br>{t("Friday by appointment · Closed weekends", "Viernes con cita · Cerrado fines de semana")}</dd></div>
+        <div><dt>{t("Phone", "Teléfono")}</dt><dd><a href="{TEL}">{PHONE}</a></dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:{MAIL}">{MAIL}</a></dd></div>
+      </dl>
+      <div class="btn-row" style="margin-top:1.5rem">
+        <a class="btn" href="{MAPS}" target="_blank" rel="noopener">{t("Get directions", "Cómo llegar")}</a>
+        <a class="btn btn-outline" href="contact.html">{t("Contact page", "Página de contacto")}</a>
+      </div>
     </div>
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:var(--gutter);align-items:end">
-      {pic(photos[1], alts[1], 1920, 1228)}
-      {pic(photos[2], alts[2], 1024, 648)}
-      {pic('assets/sierra-court-motel-winter-haven-florida.jpg', 'Vintage night postcard of the Sierra Court Motel, Winter Haven', 1024, 652)}
-    </div>
+    {tilemap()}
   </div>
 </section>
 {cta_band()}
 '''
+
+# =================================================================== SERVICES
+def services():
+    jump = ''.join(f'<a href="#{key}">{t(*name)}</a>' for key, _, name, _, _, _ in SERVICES)
+    rows = ''
+    for i, (key, tone, name, fact, lead, items) in enumerate(SERVICES):
+        more = f'<a class="btn btn-outline" href="sleep-apnea.html">{t("Sleep apnea page", "Página de apnea del sueño")}</a>' if key == 'sleep' else ''
+        art = f'<div class="service-art">{ART[key]}</div>'
+        text = f'''<div>
+      <h2 class="h2">{t(*name)}</h2>
+      <p class="lead" style="margin-top:0.75rem">{t(*lead)}</p>
+      {checklist(items, cols=True)}
+      <div class="btn-row"><a class="btn" href="contact.html#request">{t("Request an appointment", "Solicitar una cita")}</a>{more}</div>
+    </div>'''
+        inner = f'{text}{art}' if i % 2 == 0 else f'{art}{text}'
+        rows += f'<section class="section{" section-alt" if i % 2 else ""}" id="{key}"><div class="wrap service">{inner}</div></section>'
+    return page_head(('Services', 'Servicios'), ('Dental services in Winter Haven', 'Servicios dentales en Winter Haven'),
+                     ('From routine cleanings to full‑mouth reconstruction, planned by a prosthodontist and a general dentist in the same office, so you are not sent somewhere else for the next step.', 'De limpiezas de rutina a reconstrucción de boca completa, planeado por un prostodoncista y un dentista general en el mismo consultorio, para que no lo manden a otro lugar para el siguiente paso.'),
+                     f'<nav class="jump" aria-label="Service areas">{jump}</nav>') + rows + cta_band()
 
 # =================================================================== SLEEP APNEA
 def sleep():
     steps = [
         (('A sleep study', 'Un estudio del sueño'), ('Your physician or a sleep lab confirms obstructive sleep apnea and how severe it is. If you already have a diagnosis, bring it.', 'Su médico o un laboratorio del sueño confirma la apnea obstructiva y su gravedad. Si ya tiene un diagnóstico, tráigalo.')),
         (('Impressions', 'Impresiones'), ('Dr. Polo takes digital impressions of your teeth and records how far forward your jaw can comfortably sit.', 'El Dr. Polo toma impresiones digitales de sus dientes y registra qué tan adelante puede quedar cómodamente su mandíbula.')),
-        (('Fitting', 'Ajuste'), ('The appliance is made for you and fitted in the office. Two thin trays, joined, that you wear only at night.', 'El aparato se fabrica para usted y se ajusta en el consultorio. Dos férulas delgadas, unidas, que usa solo de noche.')),
+        (('Fitting', 'Ajuste'), ('The appliance is made for you and fitted in the office: two thin trays, joined, worn only at night.', 'El aparato se fabrica para usted y se ajusta en el consultorio: dos férulas delgadas, unidas, solo de noche.')),
         (('Adjustments', 'Ajustes'), ('Small advances over a few weeks until snoring stops and sleep improves, then a check once a year.', 'Pequeños avances durante algunas semanas hasta que el ronquido pare y el sueño mejore, y luego una revisión al año.')),
     ]
-    step_html = ''.join(f'<div><h3>{t(*h)}</h3><p>{t(*p)}</p></div>' for h, p in steps)
+    step_html = ''.join(f'<div class="step"><h3>{t(*h)}</h3><p>{t(*p)}</p></div>' for h, p in steps)
     faqs = [
         (('Who', 'Quién'), ('Who is it for?', '¿Para quién es?'), ('Adults with mild to moderate obstructive sleep apnea, people who snore, and CPAP users who cannot tolerate the mask. Severe apnea usually still needs CPAP; the appliance can sometimes be combined with it.', 'Adultos con apnea obstructiva leve a moderada, personas que roncan y usuarios de CPAP que no toleran la máscara. La apnea severa suele seguir necesitando CPAP; a veces el aparato se combina con él.')),
         (('Comfort', 'Comodidad'), ('Is it comfortable?', '¿Es cómodo?'), ('It is custom made from impressions of your own teeth, so it fits like a night guard. Most people stop noticing it within two weeks.', 'Se hace a medida con impresiones de sus propios dientes, así que se siente como un protector nocturno. La mayoría deja de notarlo en dos semanas.')),
-        (('Cost', 'Costo'), ('Is it covered?', '¿Lo cubre el seguro?'), ('Oral appliances for diagnosed sleep apnea are often covered by medical insurance rather than dental. The front desk will check with your plan before anything is made.', 'Los aparatos bucales para apnea diagnosticada suelen estar cubiertos por el seguro médico y no el dental. La recepción lo verifica con su plan antes de fabricar nada.')),
+        (('Cost', 'Costo'), ('Is it covered by insurance?', '¿Lo cubre el seguro?'), ('Oral appliances for diagnosed sleep apnea are often covered by medical insurance rather than dental. The front desk will check with your plan before anything is made.', 'Los aparatos bucales para apnea diagnosticada suelen estar cubiertos por el seguro médico y no el dental. La recepción lo verifica con su plan antes de fabricar nada.')),
     ]
-    return f'''
-<section class="wrap grid page-head">
-  <h1 class="h1" data-rise style="--i:0">{t("Sleep without the mask", "Dormir sin la máscara")}</h1>
-  <p class="lead muted" data-rise style="--i:1">{t("A custom dental sleep device, fitted by a prosthodontist, keeps your airway open at night. Far more comfortable than CPAP, no surgery, nothing to plug in.", "Un dispositivo dental a medida, ajustado por un prostodoncista, mantiene su vía aérea abierta de noche. Mucho más cómodo que el CPAP, sin cirugía, sin enchufes.")}</p>
-  {pic('assets/sunset-lake-howard-winter-haven-fl.jpg', 'Sunset over Lake Howard, Winter Haven, with a fisherman on a dock', 1024, 683, 'pic pic-tall lake shutter drift', lazy=False)}
-</section>
-
-<section class="section night">
-  <div class="wrap grid two" data-reveal>
+    return page_head(('Sleep apnea', 'Apnea del sueño'), ('Sleep apnea treatment without the mask', 'Tratamiento de apnea del sueño sin la máscara'),
+                     ('A custom dental sleep device, fitted by a prosthodontist, keeps your airway open at night. Far more comfortable than CPAP, no surgery, nothing to plug in.', 'Un dispositivo dental a medida, ajustado por un prostodoncista, mantiene su vía aérea abierta de noche. Mucho más cómodo que el CPAP, sin cirugía, sin enchufes.')) + f'''
+<section class="section">
+  <div class="wrap service">
     <div>
-      {section_title("What the appliance does", "Qué hace el aparato")}
-      <p class="lead muted">{t("Obstructive sleep apnea happens when the tongue and soft tissue fall back and close the airway. The appliance holds the lower jaw a few millimetres forward, so the airway stays open and the snoring stops.", "La apnea obstructiva ocurre cuando la lengua y el tejido blando caen hacia atrás y cierran la vía aérea. El aparato sostiene la mandíbula unos milímetros hacia adelante, así la vía aérea queda abierta y el ronquido para.")}</p>
-      <ul class="lakes" style="margin-top:1.5rem">
-        <li>{t("Two thin custom trays, joined, worn only at night", "Dos férulas delgadas a medida, unidas, solo de noche")}</li>
-        <li>{t("Quiet: no pump, no hose, no mask", "Silencioso: sin bomba, sin manguera, sin máscara")}</li>
-        <li>{t("Fits in a pocket for travel", "Cabe en un bolsillo para viajar")}</li>
-        <li>{t("Adjustable in small steps until it works", "Ajustable en pasos pequeños hasta que funcione")}</li>
-      </ul>
+      <span class="eyebrow">{t("How it works", "Cómo funciona")}</span>
+      <h2 class="h2">{t("What the appliance does", "Qué hace el aparato")}</h2>
+      <p class="lead" style="margin-top:0.75rem">{t("Obstructive sleep apnea happens when the tongue and soft tissue fall back and close the airway. The appliance holds the lower jaw a few millimetres forward, so the airway stays open and the snoring stops.", "La apnea obstructiva ocurre cuando la lengua y el tejido blando caen hacia atrás y cierran la vía aérea. El aparato sostiene la mandíbula unos milímetros hacia adelante, así la vía aérea queda abierta y el ronquido para.")}</p>
+      {checklist([("Two thin custom trays, joined, worn only at night", "Dos férulas delgadas a medida, unidas, solo de noche"), ("Quiet: no pump, no hose, no mask", "Silencioso: sin bomba, sin manguera, sin máscara"), ("Fits in a pocket for travel", "Cabe en un bolsillo para viajar"), ("Adjustable in small steps until it works", "Ajustable en pasos pequeños hasta que funcione")])}
+      <div class="btn-row"><a class="btn" href="contact.html#request">{t("Ask about the appliance", "Preguntar por el aparato")}</a></div>
     </div>
-    <div class="tile-art lake" style="background:var(--lake);aspect-ratio:0.7;padding:16%;width:72%;margin-inline:auto">{ART['sleep'].replace(INK, '#f4f1ea')}</div>
+    <div class="service-art">{ART["sleep"]}</div>
   </div>
 </section>
-
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head"><span class="eyebrow">{t("The process", "El proceso")}</span><h2 class="h2">{t("Four visits, then once a year", "Cuatro visitas, luego una al año")}</h2></div>
+    <div class="steps steps-4">{step_html}</div>
+  </div>
+</section>
 <section class="section">
-  <div class="wrap grid" data-reveal>
-    <div class="flow-head">
-      {section_title("How it goes", "Cómo es el proceso")}
-      <p class="muted">{t("Four visits over a few weeks, then once a year.", "Cuatro visitas en unas semanas, luego una al año.")}</p>
-    </div>
-    <div class="flow-steps" style="grid-template-columns:repeat(4,minmax(0,1fr))">{step_html}</div>
-  </div>
-</section>
-
-<section class="section field-surface">
-  <div class="wrap grid">
-    <div class="faq-head" data-reveal>{section_title("Before you ask", "Antes de que pregunte")}</div>
-    <div class="cards">{faq_cards(faqs)}</div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap grid" data-reveal-pic>
-    <div class="strip-head" data-reveal>
-      {section_title("Night in Winter Haven", "La noche en Winter Haven")}
-      <p>{t("A town built for sleeping well: quiet streets between the lakes, and a motel postcard that promised “a vacation in itself”.", "Un pueblo hecho para dormir bien: calles tranquilas entre los lagos, y una postal de motel que prometía “unas vacaciones en sí mismo”.")}</p>
-      <div class="btn-row" style="margin-top:1.5rem"><a class="btn" href="contact.html">{t("Ask about the appliance", "Preguntar por el aparato")}</a></div>
-    </div>
-    <div class="strip">
-      <figure>{pic('assets/sierra-court-motel-winter-haven-florida.jpg', 'Vintage night postcard of the Sierra Court Motel, Winter Haven, under a full moon', 1024, 652, 'pic lake')}<figcaption>{t("The Sierra Court Motel by moonlight, 1950s.", "El Sierra Court Motel a la luz de la luna, años 50.")}</figcaption></figure>
-      <figure>{pic('assets/hartman-litho-sales-co-ig4-e-8595.jpg', 'Vintage postcard of Gardenia Lane in Idylwild Gardens, Winter Haven', 1920, 1209, 'pic lake')}<figcaption>{t("Gardenia Lane, Idylwild Gardens.", "Gardenia Lane, Idylwild Gardens.")}</figcaption></figure>
-      <figure>{pic('assets/jacaranda-apartments-winter-haven-florida.jpg', 'Vintage postcard of the Jacaranda Apartments, Winter Haven', 1024, 646, 'pic lake')}<figcaption>{t("The Jacaranda Apartments, 1940s.", "Los Jacaranda Apartments, años 40.")}</figcaption></figure>
-    </div>
+  <div class="wrap two-col two-col-start">
+    <div class="section-head" style="margin-bottom:0"><span class="eyebrow">{t("Questions", "Preguntas")}</span><h2 class="h2">{t("Before you ask", "Antes de que pregunte")}</h2><p class="lead">{t("The three questions every sleep apnea patient asks first.", "Las tres preguntas que todo paciente con apnea hace primero.")}</p></div>
+    <div>{faq_list(faqs)}</div>
   </div>
 </section>
 {cta_band('Tired of the mask?', '¿Cansado de la máscara?')}
@@ -568,68 +498,39 @@ def sleep():
 
 # =================================================================== DOCTORS
 def doctors():
-    return f'''
-<section class="wrap grid page-head">
-  <h1 class="h1" data-rise style="--i:0">{t("The two doctors", "Los dos doctores")}</h1>
-  <p class="lead muted" data-rise style="--i:1">{t("A prosthodontist who rebuilds, and a general dentist who keeps everything healthy. Between them, every treatment the office offers, in English, Spanish and German.", "Un prostodoncista que reconstruye, y un dentista general que mantiene todo sano. Entre los dos, todos los tratamientos del consultorio, en español, inglés y alemán.")}</p>
-  {pic('assets/cypress-gardens-florida-26975314327.jpg', 'A boat on the canal through the flower beds of Cypress Gardens', 1920, 1205, 'pic pic-tall lake shutter drift', lazy=False)}
-</section>
-
-<div class="wrap section">
-<section class="doc grid" id="polo" data-reveal>
-  <figure class="doc-portrait">
-    <div class="pic lake"><img src="assets/florida-citrus-queen-sally-ardrey-and-her.jpg" alt="The 1955 Florida Citrus Queen and her court on a stage of oranges at the Florida Citrus Exposition, Winter Haven" width="1200" height="950" loading="lazy"></div>
-    <figcaption>{t("Portrait to be supplied by the office. Shown: the Florida Citrus Exposition, Winter Haven, 1955.", "Retrato a entregar por el consultorio. En la imagen: la Exposición de Cítricos de Florida, Winter Haven, 1955.")}</figcaption>
-  </figure>
-  <div class="doc-text" data-reveal>
-    <h2 class="h2">Dr. Carlos A. Polo, DDS, MS</h2>
-    <p class="role">{t("Prosthodontist", "Prostodoncista")}</p>
-    <div class="body">
+    return page_head(('Doctors', 'Doctores'), ('Meet the doctors', 'Conozca a los doctores'),
+                     ('A prosthodontist who rebuilds, and a general dentist who keeps everything healthy. Between them, every treatment the office offers, in English, Spanish and German.', 'Un prostodoncista que reconstruye, y un dentista general que mantiene todo sano. Entre los dos, todos los tratamientos del consultorio, en español, inglés y alemán.')) + f'''
+<section class="section" id="polo">
+  <div class="wrap doctor doctor-page">
+    <div class="doctor-photo"><div><b>CP</b><span>{t("Portrait to be supplied by the office", "Retrato a entregar por el consultorio")}</span></div></div>
+    <div>
+      <h2 class="h2">Dr. Carlos A. Polo, DDS, MS</h2>
+      <p class="role">{t("Prosthodontist", "Prostodoncista")}</p>
       <p>{t("Dr. Polo trained at the Universidad Francisco Marroquín School of Dentistry in Guatemala City and received his D.D.S. with cum laude honors in 2003. He went on to specialty training in prosthodontics, the branch of dentistry that replaces and rebuilds teeth: crowns and bridges, complete and partial dentures, implant restorations and full‑mouth reconstruction.", "El Dr. Polo se formó en la Facultad de Odontología de la Universidad Francisco Marroquín, en la Ciudad de Guatemala, y recibió su D.D.S. con honores cum laude en 2003. Continuó con la especialidad en prostodoncia, la rama de la odontología que reemplaza y reconstruye dientes: coronas y puentes, prótesis completas y parciales, restauraciones sobre implantes y reconstrucción de boca completa.")}</p>
       <p>{t("Patients describe him the same way in review after review: he explains everything he is doing and why, before he does it. He also fits custom oral appliances for sleep apnea.", "Los pacientes lo describen igual, opinión tras opinión: explica todo lo que hace y por qué, antes de hacerlo. También ajusta aparatos bucales a medida para la apnea del sueño.")}</p>
+      {checklist([("D.D.S., cum laude, Universidad Francisco Marroquín, 2003", "D.D.S., cum laude, Universidad Francisco Marroquín, 2003"), ("M.S. and specialty training in prosthodontics", "M.S. y especialidad en prostodoncia"), ("Languages: English, Spanish, German", "Idiomas: inglés, español, alemán")])}
     </div>
-    <ul class="lakes">
-      <li>{t("D.D.S., cum laude, Universidad Francisco Marroquín, 2003", "D.D.S., cum laude, Universidad Francisco Marroquín, 2003")}</li>
-      <li>{t("M.S. and specialty training in prosthodontics", "M.S. y especialidad en prostodoncia")}</li>
-      <li>{t("Languages: English, Spanish, German", "Idiomas: inglés, español, alemán")}</li>
-    </ul>
   </div>
 </section>
-
-<section class="doc grid" id="cruz" data-reveal>
-  <figure class="doc-portrait">
-    <div class="pic lake"><img src="assets/the-orange-blossom-special-going-through-orange.jpg" alt="Vintage postcard of the Orange Blossom Special train passing orange groves in Florida" width="1024" height="648" loading="lazy"></div>
-    <figcaption>{t("Portrait to be supplied by the office. Shown: a 1940s postcard of the Orange Blossom Special.", "Retrato a entregar por el consultorio. En la imagen: una postal de los años 40 del Orange Blossom Special.")}</figcaption>
-  </figure>
-  <div class="doc-text" data-reveal>
-    <h2 class="h2">Dr. Jose G. Cruz, DDS</h2>
-    <p class="role">{t("General dentist, co‑founder", "Dentista general, cofundador")}</p>
-    <div class="body">
-      <p>{t("Dr. Cruz co‑founded Dental Solutions of Winter Haven. He practices the whole of general dentistry, checkups, fillings, root canals, extractions, and places and restores implants, for children and adults, in English and Spanish.", "El Dr. Cruz cofundó Dental Solutions of Winter Haven. Ejerce toda la odontología general, revisiones, empastes, conductos, extracciones, y coloca y restaura implantes, para niños y adultos, en español e inglés.")}</p>
+<section class="section section-alt" id="cruz">
+  <div class="wrap doctor doctor-page">
+    <div class="doctor-photo"><div><b>JC</b><span>{t("Portrait to be supplied by the office", "Retrato a entregar por el consultorio")}</span></div></div>
+    <div>
+      <h2 class="h2">Dr. Jose G. Cruz, DDS</h2>
+      <p class="role">{t("General dentist · Co‑founder", "Dentista general · Cofundador")}</p>
+      <p>{t("Dr. Cruz co‑founded Dental Solutions of Winter Haven. He practices the whole of general dentistry, checkups, fillings, root canals and extractions, and places and restores implants, for children and adults, in English and Spanish.", "El Dr. Cruz cofundó Dental Solutions of Winter Haven. Ejerce toda la odontología general, revisiones, empastes, conductos y extracciones, y coloca y restaura implantes, para niños y adultos, en español e inglés.")}</p>
       <p>{t("Patients call him kind and compassionate, which is the part of dentistry no school teaches.", "Los pacientes lo llaman amable y compasivo, que es la parte de la odontología que ninguna escuela enseña.")}</p>
+      {checklist([("D.D.S., general dentistry", "D.D.S., odontología general"), ("Implant placement and restoration", "Colocación y restauración de implantes"), ("Languages: English, Spanish", "Idiomas: inglés, español")])}
     </div>
-    <ul class="lakes">
-      <li>{t("D.D.S., general dentistry", "D.D.S., odontología general")}</li>
-      <li>{t("Implant placement and restoration", "Colocación y restauración de implantes")}</li>
-      <li>{t("Languages: English, Spanish", "Idiomas: inglés, español")}</li>
-    </ul>
   </div>
 </section>
-</div>
-
-<section class="section field-surface">
-  <div class="wrap grid two" data-reveal>
-    <div>
-      {section_title("Why two doctors matter", "Por qué importan dos doctores")}
-      <p class="lead muted">{t("Most offices refer crowns, dentures and implant work out to a specialist across town. Here the specialist is down the hall, so one plan covers everything and nobody repeats your X‑rays.", "La mayoría de los consultorios remiten coronas, prótesis e implantes a un especialista al otro lado del pueblo. Aquí el especialista está en el pasillo, así que un solo plan lo cubre todo y nadie repite sus radiografías.")}</p>
-      {pic('assets/winter-haven-legoland-florida-island-in-the.jpg', 'Lake Eloise seen from above, with the far shore and summer clouds', 1920, 1402, 'pic lake pic-inline')}
-    </div>
-    <div>
-      <dl class="facts">
-        <div><dt>{t("Prosthodontist", "Prostodoncista")}</dt><dd>{t("A dentist with two to three extra years of specialty training in replacing and rebuilding teeth. There are fewer than 4,000 in the United States.", "Un dentista con dos a tres años extra de especialidad en reemplazar y reconstruir dientes. Hay menos de 4.000 en Estados Unidos.")}</dd></div>
-        <div><dt>{t("General dentist", "Dentista general")}</dt><dd>{t("Your first stop for everything: prevention, diagnosis, fillings, root canals, extractions and children.", "Su primera parada para todo: prevención, diagnóstico, empastes, conductos, extracciones y niños.")}</dd></div>
-        <div><dt>{t("Together", "Juntos")}</dt><dd>{t("One record, one plan, one bill, in your language.", "Un expediente, un plan, una cuenta, en su idioma.")}</dd></div>
-      </dl>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">{t("Why it matters", "Por qué importa")}</span><h2 class="h2">{t("Why two doctors matter", "Por qué importan dos doctores")}</h2></div>
+    <div class="grid-3">
+      <div class="card"><span class="icon">{I["tooth"]}</span><h3 class="h3">{t("Prosthodontist", "Prostodoncista")}</h3><p>{t("A dentist with two to three extra years of specialty training in replacing and rebuilding teeth. There are fewer than 4,000 in the United States.", "Un dentista con dos a tres años extra de especialidad en reemplazar y reconstruir dientes. Hay menos de 4.000 en Estados Unidos.")}</p></div>
+      <div class="card"><span class="icon">{I["check"]}</span><h3 class="h3">{t("General dentist", "Dentista general")}</h3><p>{t("Your first stop for everything: prevention, diagnosis, fillings, root canals, extractions and children.", "Su primera parada para todo: prevención, diagnóstico, empastes, conductos, extracciones y niños.")}</p></div>
+      <div class="card"><span class="icon">{I["globe"]}</span><h3 class="h3">{t("Together", "Juntos")}</h3><p>{t("One record, one plan, one bill, in your language. Nobody repeats your X‑rays or sends you across town.", "Un expediente, un plan, una cuenta, en su idioma. Nadie repite sus radiografías ni lo manda al otro lado del pueblo.")}</p></div>
     </div>
   </div>
 </section>
@@ -638,36 +539,22 @@ def doctors():
 
 # =================================================================== REVIEWS
 def reviews():
-    quotes = ''.join(f'<blockquote class="mark"><p>{t(*q)}</p><footer>{name}</footer></blockquote>' for q, name in QUOTES)
-    return f'''
-<section class="wrap grid page-head">
-  <h1 class="h1" data-rise style="--i:0">{t("What patients say", "Lo que dicen los pacientes")}</h1>
-  <p class="lead muted" data-rise style="--i:1">{t("Dental Solutions of Winter Haven holds 4.9 stars on Google from more than 260 reviews. These are a few, shortened, from public review sites.", "Dental Solutions of Winter Haven tiene 4,9 estrellas en Google con más de 260 opiniones. Estas son algunas, acortadas, de sitios públicos de opiniones.")}</p>
-  {pic('assets/jacaranda-apartments-winter-haven-florida.jpg', 'Vintage postcard of the Jacaranda Apartments, Winter Haven', 1024, 646, 'pic pic-tall lake shutter drift', lazy=False)}
-</section>
+    return page_head(('Reviews', 'Opiniones'), ('What patients say', 'Lo que dicen los pacientes'),
+                     ('A few public reviews, shortened. The practice holds 4.9 stars on Google from more than 260 reviews.', 'Algunas opiniones públicas, acortadas. El consultorio tiene 4,9 estrellas en Google con más de 260 opiniones.')) + f'''
 <section class="section">
   <div class="wrap">
-    <div class="board" data-reveal>
-      <div class="mark mark-head"><h2 class="h2">{t("4.9 stars on Google", "4,9 estrellas en Google")}</h2><p>{t("More than 260 reviews", "Más de 260 opiniones")}</p></div>
-      {quotes}
-      <div class="mark mark-pic lake"><img src="assets/hartman-litho-sales-co-ig4-e-8595.jpg" alt="Vintage postcard of Gardenia Lane in Idylwild Gardens, Winter Haven" width="1920" height="1209" loading="lazy"></div>
-      <div class="mark mark-pic lake"><img src="assets/florida-citrus-queen-sally-ardrey-and-her.jpg" alt="The 1955 Florida Citrus Queen and her court on a stage of oranges, Winter Haven" width="1200" height="950" loading="lazy"></div>
+    <div class="card card-pad-lg rating" style="margin-bottom:1.5rem">
+      <span class="big">4.9</span>
+      <div><div class="stars" aria-label="4.9 out of 5">{I["star"] * 5}</div><strong style="display:block;color:var(--ink);margin-top:0.25rem">{t("More than 260 Google reviews", "Más de 260 opiniones en Google")}</strong><span class="muted small">{t("Figure from public directories; confirm the current count.", "Cifra de directorios públicos; confirmar el número actual.")}</span></div>
+      <a class="btn btn-outline" style="margin-left:auto" href="{REVIEW}" target="_blank" rel="noopener">{t("Read them on Google", "Leerlas en Google")}</a>
     </div>
+    <div class="grid-2">{review_cards(4)}</div>
   </div>
 </section>
-<section class="section field-surface">
-  <div class="wrap grid two" data-reveal>
-    <div>
-      {section_title("Been a patient?", "¿Ha sido paciente?")}
-      <p class="lead muted">{t("A short review helps the next family find the office. It takes a minute on Google.", "Una opinión corta ayuda a la siguiente familia a encontrar el consultorio. Toma un minuto en Google.")}</p>
-      <div class="btn-row"><a class="btn" href="{REVIEW}" target="_blank" rel="noopener">{t("Leave a Google review", "Dejar una opinión en Google")}</a></div>
-    </div>
-    <div>
-      {section_title("New here?", "¿Nuevo aquí?")}
-      <p class="lead muted">{t("Your first visit is an exam and a conversation about options and cost, nothing more. Nobody will lecture you, however long it has been.", "Su primera visita es un examen y una conversación sobre opciones y costo, nada más. Nadie lo va a regañar, por mucho tiempo que haya pasado.")}</p>
-      <div class="btn-row"><a class="btn btn-ink" href="contact.html">{t("Book a first visit", "Reservar primera visita")}</a></div>
-      {pic('assets/cypress-gardens-florida-26975314327.jpg', 'A boat on the canal through the flower beds of Cypress Gardens', 1920, 1205, 'pic lake pic-inline')}
-    </div>
+<section class="section section-alt">
+  <div class="wrap grid-2">
+    <div class="card card-pad-lg"><h3 class="h3">{t("Been a patient?", "¿Ha sido paciente?")}</h3><p>{t("A short review helps the next family find the office. It takes a minute on Google.", "Una opinión corta ayuda a la siguiente familia a encontrar el consultorio. Toma un minuto en Google.")}</p><div class="btn-row" style="margin-top:1.25rem"><a class="btn" href="{REVIEW}" target="_blank" rel="noopener">{t("Leave a Google review", "Dejar una opinión en Google")}</a></div></div>
+    <div class="card card-pad-lg"><h3 class="h3">{t("New here?", "¿Nuevo aquí?")}</h3><p>{t("Your first visit is an exam and a conversation about options and cost, nothing more. Nobody will lecture you, however long it has been.", "Su primera visita es un examen y una conversación sobre opciones y costo, nada más. Nadie lo va a regañar, por mucho tiempo que haya pasado.")}</p><div class="btn-row" style="margin-top:1.25rem"><a class="btn btn-outline" href="contact.html#request">{t("Request a first visit", "Solicitar primera visita")}</a></div></div>
   </div>
 </section>
 {cta_band()}
@@ -675,55 +562,57 @@ def reviews():
 
 # =================================================================== CONTACT
 def contact():
-    return f'''
-<section class="wrap grid page-head">
-  <h1 class="h1" data-rise style="--i:0">{t("Book a visit or ask a question", "Reserve una cita o pregunte")}</h1>
-  <p class="lead muted" data-rise style="--i:1">{t("Call during office hours, or send the request below and the front desk replies the next business day. Hablamos español. Wir sprechen Deutsch.", "Llame en horario de oficina o envíe la solicitud de abajo y la recepción responde el siguiente día hábil. We speak English. Wir sprechen Deutsch.")}</p>
-  <div class="pic pic-tall lake shutter drift" style="grid-column:9/13;grid-row:1/3"><img src="assets/sunset-lake-howard-winter-haven-fl.jpg" alt="Sunset over Lake Howard, Winter Haven" width="1024" height="683"></div>
-</section>
-
-<section class="section-tight" id="hours">
-  <div class="wrap grid two" data-reveal>
-    <div>
-      {section_title("Hours and address", "Horario y dirección")}
+    pay = ['Visa', 'Mastercard', 'American Express', 'Discover', 'CareCredit', 'CitiHealth', t('Cash and check', 'Efectivo y cheque'), t('Most PPO plans', 'La mayoría de planes PPO')]
+    return page_head(('Contact', 'Contacto'), ('Contact and hours', 'Contacto y horario'),
+                     ('Call during office hours, or send the request below and the front desk replies the next business day. Hablamos español. Wir sprechen Deutsch.', 'Llame en horario de oficina o envíe la solicitud de abajo y la recepción responde el siguiente día hábil. We speak English. Wir sprechen Deutsch.')) + f'''
+<section class="section" id="hours">
+  <div class="wrap two-col two-col-start">
+    <div class="card card-pad-lg">
+      <h2 class="h2" style="margin-bottom:1rem">{t("Hours and address", "Horario y dirección")}</h2>
+      <p style="margin-bottom:1rem"><span class="open-now" data-open-now></span></p>
+      <table class="hours">
+        <tr><td>{t("Monday", "Lunes")}</td><td>8:00 a.m. – 5:00 p.m.</td></tr>
+        <tr><td>{t("Tuesday", "Martes")}</td><td>8:00 a.m. – 5:00 p.m.</td></tr>
+        <tr><td>{t("Wednesday", "Miércoles")}</td><td>8:00 a.m. – 5:00 p.m.</td></tr>
+        <tr><td>{t("Thursday", "Jueves")}</td><td>8:00 a.m. – 5:00 p.m.</td></tr>
+        <tr><td>{t("Friday", "Viernes")}</td><td>{t("By appointment", "Con cita")}</td></tr>
+        <tr><td>{t("Saturday and Sunday", "Sábado y domingo")}</td><td>{t("Closed", "Cerrado")}</td></tr>
+      </table>
       <dl class="facts" style="margin-top:1.5rem">
-        <div><dt>{t("Today", "Hoy")}</dt><dd><span class="open-now" data-open-now></span></dd></div>
-        <div><dt>{t("Hours", "Horario")}</dt><dd>{t("Monday to Thursday, 8 a.m. to 5 p.m.", "Lunes a jueves, 8 a.m. a 5 p.m.")}<br>{t("Friday by appointment. Closed Saturday and Sunday.", "Viernes con cita. Cerrado sábado y domingo.")}</dd></div>
         <div><dt>{t("Address", "Dirección")}</dt><dd>{ADDR1}<br>{ADDR2}</dd></div>
         <div><dt>{t("Phone", "Teléfono")}</dt><dd><a href="{TEL}">{PHONE}</a></dd></div>
         <div><dt>Email</dt><dd><a href="mailto:{MAIL}">{MAIL}</a></dd></div>
         <div><dt>{t("Languages", "Idiomas")}</dt><dd>English · Español · Deutsch</dd></div>
       </dl>
-      <div class="btn-row">
-        <a class="btn" href="{MAPS}" target="_blank" rel="noopener">{t("Directions", "Cómo llegar")}</a>
-        <a class="btn btn-paper" href="{TEL}">{t("Call", "Llamar")} {PHONE}</a>
+      <div class="btn-row" style="margin-top:1.5rem">
+        <a class="btn" href="{MAPS}" target="_blank" rel="noopener">{t("Get directions", "Cómo llegar")}</a>
+        <a class="btn btn-outline" href="{TEL}">{I["phone"]} {t("Call", "Llamar")}</a>
       </div>
     </div>
-    <div class="lake">{tilemap()}</div>
-  </div>
-</section>
-
-{coupon()}
-
-<section class="section field-surface" id="pay">
-  <div class="wrap grid two" data-reveal>
     <div>
-      {section_title("Insurance and payment", "Seguros y pagos")}
-      <p class="lead muted">{t("Most PPO plans are accepted and filed for you. CareCredit financing is available for larger plans, with a prequalification that does not affect your credit score.", "Se aceptan la mayoría de los planes PPO y el consultorio presenta el reclamo. Hay financiamiento CareCredit para planes grandes, con una precalificación que no afecta su puntaje de crédito.")}</p>
+      {tilemap()}
+      <p class="caption">{t("6390 Cypress Gardens Blvd, Suite B, between Lake Eloise and Lake Winterset. Free parking at the door.", "6390 Cypress Gardens Blvd, Suite B, entre Lake Eloise y Lake Winterset. Estacionamiento gratis en la puerta.")}</p>
+      <div style="margin-top:1.5rem">{lake_tool()}</div>
     </div>
-    <div>{pay_tiles()}</div>
   </div>
 </section>
-
+<section class="section section-alt" id="request">
+  <div class="wrap two-col two-col-start">
+    {request_form()}
+    <div>
+      <div class="card" style="margin-bottom:1.5rem"><span class="icon">{I["alert"]}</span><h3 class="h3">{t("Pain today?", "¿Dolor hoy?")}</h3><p>{t("Don’t use the form. Call as early as you can: same‑day times are kept open Monday to Thursday.", "No use el formulario. Llame lo antes posible: se reservan horas del mismo día de lunes a jueves.")}</p><div class="btn-row" style="margin-top:1rem"><a class="btn btn-accent" href="{TEL}">{I["phone"]} {PHONE}</a></div></div>
+      <div class="card" id="pay"><span class="icon">{I["check"]}</span><h3 class="h3">{t("Insurance and payment", "Seguros y pagos")}</h3><p>{t("Most PPO plans are accepted and filed for you. CareCredit financing is available for larger plans, with a prequalification that does not affect your credit score.", "Se aceptan la mayoría de los planes PPO y el consultorio presenta el reclamo. Hay financiamiento CareCredit para planes grandes, con una precalificación que no afecta su puntaje de crédito.")}</p><ul class="chips">{''.join(f'<li>{p}</li>' for p in pay)}</ul></div>
+    </div>
+  </div>
+</section>
 <section class="section" id="faq">
-  <div class="wrap grid">
-    <div class="faq-head" data-reveal>{section_title("Questions people ask first", "Lo que la gente pregunta primero")}</div>
-    <div class="cards">{faq_cards(FAQS)}</div>
+  <div class="wrap two-col two-col-start">
+    <div class="section-head" style="margin-bottom:0"><span class="eyebrow">FAQ</span><h2 class="h2">{t("Questions people ask first", "Lo que la gente pregunta primero")}</h2><p class="lead">{t("If yours is not here, call or send the form.", "Si la suya no está aquí, llame o envíe el formulario.")}</p></div>
+    <div>{faq_list(FAQS)}</div>
   </div>
 </section>
 '''
 
-# --------------------------------------------------------------------------- build
 TITLES = {
     'index.html': ('Dental Solutions of Winter Haven · Dentists on Cypress Gardens Blvd', 'A prosthodontist and a general dentist in Winter Haven, FL. Family dentistry, crowns, dentures, implants, veneers, sleep apnea appliances and same‑day emergencies. English, Spanish, German.'),
     'services.html': ('Services · Dental Solutions of Winter Haven', 'Family and general dentistry, prosthodontics, cosmetic dentistry, implants and oral surgery, sleep apnea treatment and emergencies in Winter Haven, FL.'),
@@ -732,6 +621,7 @@ TITLES = {
     'reviews.html': ('Reviews · Dental Solutions of Winter Haven', 'What patients say about Dental Solutions of Winter Haven: 4.9 stars on Google.'),
     'contact.html': ('Contact and hours · Dental Solutions of Winter Haven', 'Book a visit at 6390 Cypress Gardens Blvd, Winter Haven, FL 33884. Call (863) 324‑7121. Monday to Thursday 8 to 5.'),
 }
+
 BODIES = {'index.html': home, 'services.html': services, 'sleep-apnea.html': sleep, 'doctors.html': doctors, 'reviews.html': reviews, 'contact.html': contact}
 
 if __name__ == '__main__':
